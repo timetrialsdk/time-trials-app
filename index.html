@@ -10,36 +10,42 @@
 
 <style>
 body{margin:0;font-family:Arial;background:#111;color:#eee}
-button{cursor:pointer}
+button{cursor:pointer;padding:8px 12px}
+.hidden{display:none}
 
 #loginScreen{
-  position:fixed;inset:0;background:black;
-  display:flex;flex-direction:column;
-  justify-content:center;align-items:center;
-  z-index:10
+  position:fixed;inset:0;
+  background:black;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
 }
 #loginScreen h1{color:gold;font-size:36px;margin:0}
 #loginScreen p{color:#ccc;font-size:14px;margin:8px 0 16px}
-#loginScreen input,#loginScreen button{
-  width:200px;padding:8px;margin:4px
-}
+#loginScreen input{width:200px;padding:8px;margin-bottom:6px}
 
-#app{display:none}
-header{text-align:center;padding:16px;background:#000}
+header{
+  text-align:center;
+  padding:16px;
+  background:#000;
+}
 header h1{color:gold;margin:0}
 header p{color:#ddd;font-size:14px;margin:6px 0 0}
 
 .container{padding:16px}
 .route{background:#1c1c1c;padding:10px;border-radius:6px;margin-bottom:10px}
+.run{background:#222;padding:6px;border-radius:4px;margin-bottom:4px}
 
 input{
-  width:100%;padding:8px;margin-bottom:6px;
-  background:#222;border:1px solid #333;color:#eee;border-radius:4px
+  width:100%;
+  padding:8px;
+  margin-bottom:6px;
+  background:#222;
+  border:1px solid #333;
+  color:#eee;
+  border-radius:4px;
 }
-
-.run{background:#222;padding:6px;border-radius:4px;margin-bottom:4px}
-.route-image{width:100%;max-height:300px;object-fit:cover;border-radius:6px;margin-bottom:10px}
-.hidden{display:none}
 </style>
 </head>
 <body>
@@ -53,7 +59,7 @@ input{
 </div>
 
 <!-- APP -->
-<div id="app">
+<div id="app" class="hidden">
 <header>
   <h1>TIME TRIALS</h1>
   <p>hvis du ikke ryster, var det ikke hurtigt nok</p>
@@ -65,10 +71,6 @@ input{
   <button id="backBtn" type="button">⬅ Tilbage</button>
 
   <input id="routeName" placeholder="Rutenavn">
-
-  <h3>Rute screenshot</h3>
-  <input type="file" id="imageInput" accept="image/*">
-  <img id="routeImage" class="route-image hidden">
 
   <h3>Tilføj run</h3>
   <input id="runName" placeholder="Navn">
@@ -82,115 +84,120 @@ input{
 </div>
 
 <script>
-// FIREBASE
+/* FIREBASE */
 firebase.initializeApp({
   apiKey:"AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
   authDomain:"time-trials-b519e.firebaseapp.com",
   projectId:"time-trials-b519e"
 });
-const db=firebase.firestore();
+const db = firebase.firestore();
 
-let currentRoute=null;
+/* STATE */
+let currentRoute = null;
 
-// LOGIN
-loginBtn.onclick=async()=>{
-  if(pw.value==="AK47-DRIFT-TUNE"){
-    loginScreen.style.display="none";
-    app.style.display="block";
+/* ELEMENTER */
+const loginScreen = document.getElementById("loginScreen");
+const app = document.getElementById("app");
+const routeList = document.getElementById("routeList");
+const routePage = document.getElementById("routePage");
+const runsDiv = document.getElementById("runs");
+
+/* LOGIN */
+document.getElementById("loginBtn").addEventListener("click", () => {
+  if(document.getElementById("pw").value === "AK47-DRIFT-TUNE"){
+    loginScreen.classList.add("hidden");
+    app.classList.remove("hidden");
     loadRoutes();
-  }else alert("Forkert kodeord");
-};
+  } else {
+    alert("Forkert kodeord");
+  }
+});
 
-// LOAD ROUTES
+/* LOAD ROUTES */
 async function loadRoutes(){
-  routeList.innerHTML='';
-  const addBtn=document.createElement("button");
-  addBtn.textContent="➕ Tilføj rute";
-  addBtn.type="button";
-  addBtn.onclick=addRoute;
+  routeList.innerHTML = "";
+  const addBtn = document.createElement("button");
+  addBtn.textContent = "➕ Tilføj rute";
+  addBtn.type = "button";
+  addBtn.onclick = addRoute;
   routeList.appendChild(addBtn);
 
-  const snap=await db.collection("routes").get();
-  snap.forEach(doc=>{
-    const r=doc.data();
-    const d=document.createElement("div");
-    d.className="route";
-    d.innerHTML=`<b>${r.name||"Ny rute"}</b><br>`;
-    const open=document.createElement("button");
-    open.textContent="Åbn";
-    open.type="button";
-    open.onclick=()=>openRoute(doc.id);
+  const snap = await db.collection("routes").get();
+  snap.forEach(doc => {
+    const r = doc.data();
+    const d = document.createElement("div");
+    d.className = "route";
+    d.innerHTML = `<b>${r.name || "Ny rute"}</b>`;
+    const open = document.createElement("button");
+    open.textContent = "Åbn";
+    open.type = "button";
+    open.onclick = () => openRoute(doc.id);
+    d.appendChild(document.createElement("br"));
     d.appendChild(open);
     routeList.appendChild(d);
   });
 }
 
-// ADD ROUTE
+/* ADD ROUTE */
 async function addRoute(){
-  await db.collection("routes").add({name:"Ny rute",runs:[],image:null});
+  await db.collection("routes").add({ name:"Ny rute", runs:[] });
   loadRoutes();
 }
 
-// OPEN ROUTE
+/* OPEN ROUTE */
 async function openRoute(id){
-  const doc=await db.collection("routes").doc(id).get();
-  currentRoute={id,...doc.data()};
+  const doc = await db.collection("routes").doc(id).get();
+  currentRoute = { id, ...doc.data() };
 
   routeList.classList.add("hidden");
   routePage.classList.remove("hidden");
 
-  routeName.value=currentRoute.name||"";
-  routeName.oninput=()=>db.collection("routes").doc(id).update({name:routeName.value});
-
-  if(currentRoute.image){
-    routeImage.src=currentRoute.image;
-    routeImage.classList.remove("hidden");
-  }else routeImage.classList.add("hidden");
-
+  document.getElementById("routeName").value = currentRoute.name || "";
   renderRuns();
 }
 
-// BACK
-backBtn.onclick=()=>{
+/* BACK */
+document.getElementById("backBtn").onclick = () => {
   routePage.classList.add("hidden");
   routeList.classList.remove("hidden");
   loadRoutes();
 };
 
-// IMAGE
-imageInput.onchange=e=>{
-  const f=e.target.files[0]; if(!f)return;
-  const r=new FileReader();
-  r.onload=async()=>{
-    routeImage.src=r.result;
-    routeImage.classList.remove("hidden");
-    currentRoute.image=r.result;
-    await db.collection("routes").doc(currentRoute.id).update({image:r.result});
-  };
-  r.readAsDataURL(f);
-};
+/* ADD RUN — 🔥 100 % SIKKER */
+document.getElementById("addRunBtn").addEventListener("click", async () => {
+  const name = document.getElementById("runName").value.trim();
+  const time = document.getElementById("runTime").value.trim();
+  const video = document.getElementById("runVideo").value.trim();
 
-// ADD RUN — 🔥 VIRKER NU
-addRunBtn.onclick=async()=>{
-  if(!runName.value||!runTime.value)return alert("Udfyld navn og tid");
-  currentRoute.runs.push({
-    name:runName.value,
-    time:runTime.value,
-    video:runVideo.value
-  });
-  await db.collection("routes").doc(currentRoute.id).update({runs:currentRoute.runs});
-  runName.value=runTime.value=runVideo.value="";
+  if(!name || !time){
+    alert("Udfyld navn og tid");
+    return;
+  }
+
+  const run = { name, time, video };
+
+  // 1️⃣ VIS MED DET SAMME
+  currentRoute.runs.push(run);
   renderRuns();
-};
 
-// RENDER RUNS
+  // 2️⃣ GEM I FIRESTORE
+  await db.collection("routes").doc(currentRoute.id).update({
+    runs: currentRoute.runs
+  });
+
+  document.getElementById("runName").value = "";
+  document.getElementById("runTime").value = "";
+  document.getElementById("runVideo").value = "";
+});
+
+/* RENDER RUNS */
 function renderRuns(){
-  runs.innerHTML='';
-  currentRoute.runs.forEach(r=>{
-    const d=document.createElement("div");
-    d.className="run";
-    d.innerHTML=`<b>${r.name}</b> – ${r.time} ${r.video?` · <a href="${r.video}" target="_blank">🎥</a>`:""}`;
-    runs.appendChild(d);
+  runsDiv.innerHTML = "";
+  currentRoute.runs.forEach(r => {
+    const d = document.createElement("div");
+    d.className = "run";
+    d.innerHTML = `<b>${r.name}</b> – ${r.time} ${r.video ? `· <a href="${r.video}" target="_blank">🎥</a>` : ""}`;
+    runsDiv.appendChild(d);
   });
 }
 </script>
