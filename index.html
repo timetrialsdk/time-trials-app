@@ -17,16 +17,9 @@
 <style>
 body{margin:0;font-family:Arial;background:#111;color:#eee}
 button{cursor:pointer}
-
-#loginScreen{
-  position:fixed;inset:0;background:black;
-  display:flex;flex-direction:column;
-  justify-content:center;align-items:center;z-index:1000
-}
+#loginScreen{position:fixed;inset:0;background:black;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:1000}
 #loginScreen h1{color:gold;text-align:center;margin-bottom:30px}
-#loginScreen input,#loginScreen button{
-  width:260px;padding:12px;margin:6px;border-radius:6px;border:none
-}
+#loginScreen input,#loginScreen button{width:260px;padding:12px;margin:6px;border-radius:6px;border:none}
 
 #app{display:none}
 header{text-align:center;padding:20px;background:#000}
@@ -64,7 +57,7 @@ input{width:100%;padding:8px;margin-bottom:6px;border-radius:5px;border:1px soli
 <div class="container" id="routeList"></div>
 
 <div class="container hidden" id="routePage">
-  <button onclick="back()">⬅ Tilbage</button>
+  <button onclick="goBack()">⬅ Tilbage</button>
   <input id="routeName">
   <div id="routeLength" class="route-meta">📏 Længde: –</div>
   <div id="map"></div>
@@ -75,28 +68,29 @@ input{width:100%;padding:8px;margin-bottom:6px;border-radius:5px;border:1px soli
   <input id="nameInput" placeholder="Navn">
   <input id="timeInput" placeholder="Tid (mm:ss)">
   <input id="videoInput" placeholder="Video-link">
-  <button onclick="addTime()">Tilføj run</button>
+  <button onclick="addRun()">Tilføj run</button>
 </div>
 </div>
 
 <script>
+/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey:"AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
   authDomain:"time-trials-b519e.firebaseapp.com",
   projectId:"time-trials-b519e"
 });
-const db=firebase.firestore();
+const db = firebase.firestore();
 
-/* 🔐 LOGIN */
+/* ================= LOGIN ================= */
 function doLogin(){
-  if(pw.value==="AK47-DRIFT-TUNE"){
-    document.getElementById("loginScreen").style.display="none";
-    document.getElementById("app").style.display="block";
+  if(pw.value === "AK47-DRIFT-TUNE"){
+    loginScreen.style.display="none";
+    app.style.display="block";
   }
 }
 
-/* DATA */
-let routes=[],current=null,map=null,router=null;
+/* ================= DATA ================= */
+let routes=[], current=null, map=null, router=null;
 
 db.collection("routes").onSnapshot(s=>{
   routes=[];
@@ -109,7 +103,7 @@ function toSec(t){
   return m*60+s;
 }
 
-/* FORSIDE */
+/* ================= FORSIDE ================= */
 function renderRoutes(){
   routeList.innerHTML='<button onclick="addRoute()">➕ Tilføj rute</button>';
   routes.forEach(r=>{
@@ -132,38 +126,47 @@ function addRoute(){
   db.collection("routes").add({name:"Ny rute",points:[],times:[],distance:0});
 }
 
-/* RUTE */
+/* ================= RUTE ================= */
 function openRoute(id){
-  current=routes.find(r=>r.id===id);
+  current = routes.find(r=>r.id===id);
   routeList.classList.add("hidden");
   routePage.classList.remove("hidden");
+
   routeName.value=current.name;
   routeName.oninput=()=>db.collection("routes").doc(id).update({name:routeName.value});
+
   renderTimes();
   initMap();
 }
 
-function back(){
+function goBack(){
   routePage.classList.add("hidden");
   routeList.classList.remove("hidden");
 }
 
-/* KORT */
+/* ================= MAP (ENDGYLDIG FIX) ================= */
 function initMap(){
   if(map) map.remove();
-  map=L.map("map").setView([55.6761,12.5683],13);
+
+  map = L.map("map").setView([55.6761,12.5683],13);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-  const pts=[...(current.points||[])];
-  router=L.Routing.control({
-    waypoints:pts.map(p=>L.latLng(p[0],p[1])),
+  const pts = [...(current.points||[])];
+
+  router = L.Routing.control({
+    waypoints: pts.map(p=>L.latLng(p[0],p[1])),
     routeWhileDragging:false,
     draggableWaypoints:true,
     addWaypoints:false,
     show:false
   }).addTo(map);
 
-  if(pts.length===2) router.route();
+  if(pts.length===2){
+    setTimeout(()=>{
+      router.setWaypoints(pts.map(p=>L.latLng(p[0],p[1])));
+      router.route();
+    },100);
+  }
 
   if(pts.length<2){
     map.on("click",e=>{
@@ -182,10 +185,14 @@ function initMap(){
   });
 }
 
-/* TIDER */
-function addTime(){
+/* ================= RUNS ================= */
+function addRun(){
   if(!nameInput.value||!timeInput.value) return;
-  current.times.push({name:nameInput.value,time:timeInput.value,video:videoInput.value});
+  current.times.push({
+    name:nameInput.value,
+    time:timeInput.value,
+    video:videoInput.value
+  });
   db.collection("routes").doc(current.id).update({times:current.times});
   nameInput.value=timeInput.value=videoInput.value="";
 }
