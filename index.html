@@ -5,9 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Time Trials</title>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
@@ -20,6 +17,7 @@ body{
 }
 button{cursor:pointer}
 
+/* LOGIN */
 #loginScreen{
   position:fixed;
   inset:0;
@@ -28,12 +26,15 @@ button{cursor:pointer}
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  z-index:1000;
 }
 #loginScreen h1{
   color:gold;
-  font-size:20px;
-  text-align:center;
+  font-size:36px;
+  margin-bottom:6px;
+}
+#loginScreen p{
+  color:#ccc;
+  font-size:14px;
   margin-bottom:15px;
 }
 #loginScreen input,
@@ -44,8 +45,8 @@ button{cursor:pointer}
   margin:5px;
 }
 
+/* APP */
 #app{display:none}
-
 header{
   text-align:center;
   padding:15px;
@@ -53,7 +54,6 @@ header{
   color:gold;
   font-size:28px;
 }
-
 .container{padding:15px}
 
 .route{
@@ -80,8 +80,10 @@ input{
   margin-bottom:4px;
 }
 
-#map{
-  height:250px;
+.route-image{
+  width:100%;
+  max-height:300px;
+  object-fit:cover;
   border-radius:8px;
   margin:10px 0;
 }
@@ -93,7 +95,8 @@ input{
 
 <!-- LOGIN -->
 <div id="loginScreen">
-  <h1>alle kan køre bilen<br>men ik alle har rettet</h1>
+  <h1>TIME TRIALS</h1>
+  <p>alle kan køre bilen, men ikke alle har rettet</p>
   <input id="pw" placeholder="Kodeord">
   <button onclick="login()">Log ind</button>
 </div>
@@ -106,10 +109,14 @@ input{
 
 <div class="container hidden" id="routePage">
   <button onclick="back()">⬅ Tilbage</button>
-  <input id="routeName">
+  <input id="routeName" placeholder="Rutenavn">
 
-  <div id="map"></div>
+  <!-- ROUTE IMAGE -->
+  <h3>Rute screenshot</h3>
+  <input type="file" accept="image/*" onchange="uploadImage(event)">
+  <img id="routeImage" class="route-image hidden">
 
+  <!-- RUNS -->
   <h3>Tilføj run</h3>
   <input id="runName" placeholder="Navn">
   <input id="runTime" placeholder="Tid (mm:ss)">
@@ -130,17 +137,13 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-/* STATE */
-let currentRoute = null;
-let map = null;
+let currentRoute=null;
 
 /* LOGIN */
 function login(){
-  const passwordInput = document.getElementById("pw");
-
-  if(passwordInput.value === "AK47-DRIFT-TUNE"){
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("app").style.display = "block";
+  if(pw.value==="AK47-DRIFT-TUNE"){
+    loginScreen.style.display="none";
+    app.style.display="block";
     loadRoutes();
   } else {
     alert("Forkert kodeord");
@@ -149,19 +152,17 @@ function login(){
 
 /* LOAD ROUTES */
 async function loadRoutes(){
-  const list = document.getElementById("routeList");
-  list.innerHTML = '<button onclick="addRoute()">➕ Tilføj rute</button>';
-
-  const snap = await db.collection("routes").get();
+  routeList.innerHTML='<button onclick="addRoute()">➕ Tilføj rute</button>';
+  const snap=await db.collection("routes").get();
   snap.forEach(doc=>{
-    const r = doc.data();
-    const div = document.createElement("div");
-    div.className = "route";
-    div.innerHTML = `
-      <b>${r.name || "Ny rute"}</b><br>
+    const r=doc.data();
+    const d=document.createElement("div");
+    d.className="route";
+    d.innerHTML=`
+      <b>${r.name||"Ny rute"}</b><br>
       <button onclick="openRoute('${doc.id}')">Åbn</button>
     `;
-    list.appendChild(div);
+    routeList.appendChild(d);
   });
 }
 
@@ -169,78 +170,90 @@ async function loadRoutes(){
 async function addRoute(){
   await db.collection("routes").add({
     name:"Ny rute",
-    runs:[]
+    runs:[],
+    image:null
   });
   loadRoutes();
 }
 
 /* OPEN ROUTE */
 async function openRoute(id){
-  const doc = await db.collection("routes").doc(id).get();
-  currentRoute = { id, ...doc.data() };
+  const doc=await db.collection("routes").doc(id).get();
+  currentRoute={id,...doc.data()};
 
-  document.getElementById("routeList").classList.add("hidden");
-  document.getElementById("routePage").classList.remove("hidden");
+  routeList.classList.add("hidden");
+  routePage.classList.remove("hidden");
 
-  document.getElementById("routeName").value = currentRoute.name || "";
-  document.getElementById("routeName").oninput = () => {
-    db.collection("routes").doc(id).update({
-      name: document.getElementById("routeName").value
-    });
+  routeName.value=currentRoute.name||"";
+  routeName.oninput=()=>{
+    db.collection("routes").doc(id).update({name:routeName.value});
   };
 
-  initMap();
+  if(currentRoute.image){
+    routeImage.src=currentRoute.image;
+    routeImage.classList.remove("hidden");
+  } else {
+    routeImage.classList.add("hidden");
+  }
+
   renderRuns();
 }
 
-/* MAP (VISUEL – IKKE GEMME) */
-function initMap(){
-  if(map) map.remove();
-  map = L.map("map").setView([55.6761, 12.5683], 13);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+/* UPLOAD IMAGE (SCREENSHOT) */
+function uploadImage(e){
+  const file=e.target.files[0];
+  if(!file) return;
+
+  const reader=new FileReader();
+  reader.onload=async ()=>{
+    routeImage.src=reader.result;
+    routeImage.classList.remove("hidden");
+
+    currentRoute.image=reader.result;
+    await db.collection("routes").doc(currentRoute.id).update({
+      image: reader.result
+    });
+  };
+  reader.readAsDataURL(file);
 }
 
 /* ADD RUN */
 async function addRun(){
-  if(!runName.value || !runTime.value) return;
+  if(!runName.value||!runTime.value) return;
 
-  const newRun = {
-    name: runName.value,
-    time: runTime.value,
-    video: runVideo.value
+  const run={
+    name:runName.value,
+    time:runTime.value,
+    video:runVideo.value
   };
 
-  currentRoute.runs = currentRoute.runs || [];
-  currentRoute.runs.push(newRun);
-
+  currentRoute.runs.push(run);
   await db.collection("routes").doc(currentRoute.id).update({
-    runs: currentRoute.runs
+    runs:currentRoute.runs
   });
 
-  runName.value = runTime.value = runVideo.value = "";
+  runName.value=runTime.value=runVideo.value="";
   renderRuns();
 }
 
 /* RENDER RUNS */
 function renderRuns(){
-  const container = document.getElementById("runs");
-  container.innerHTML = "";
-
-  (currentRoute.runs || []).forEach(r=>{
-    const d = document.createElement("div");
-    d.className = "run";
-    d.innerHTML = `
+  runs.innerHTML="";
+  currentRoute.runs.forEach(r=>{
+    const d=document.createElement("div");
+    d.className="run";
+    d.innerHTML=`
       <b>${r.name}</b> – ${r.time}
-      ${r.video ? ` · <a href="${r.video}" target="_blank">🎥</a>` : ""}
+      ${r.video?` · <a href="${r.video}" target="_blank">🎥</a>`:""}
     `;
-    container.appendChild(d);
+    runs.appendChild(d);
   });
 }
 
 /* BACK */
 function back(){
-  document.getElementById("routePage").classList.add("hidden");
-  document.getElementById("routeList").classList.remove("hidden");
+  routePage.classList.add("hidden");
+  routeList.classList.remove("hidden");
   loadRoutes();
 }
 </script>
