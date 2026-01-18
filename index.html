@@ -13,31 +13,81 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 
 <style>
 body{margin:0;font-family:Arial;background:#111;color:#eee}
-#login{position:fixed;inset:0;background:black;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
-#login h1{color:gold;text-align:center}
-#login input,#login button{padding:12px;margin-top:10px}
+
+/* LOGIN */
+#login{
+  position:fixed;
+  inset:0;
+  background:black;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+}
+
+#login h1{
+  color:gold;
+  text-align:center;
+  margin-bottom:30px;
+}
+
+/* 🔥 SMÅ HVIDE FIRKANTER */
+#login input,
+#login button{
+  width:260px;
+  padding:12px;
+  margin-top:12px;
+  border-radius:6px;
+  border:none;
+  font-size:16px;
+}
+
+#login input{
+  background:#fff;
+  color:#000;
+}
+
+#login button{
+  background:#fff;
+  color:#000;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+#login p{
+  color:red;
+  margin-top:10px;
+  display:none;
+}
+
+/* APP */
 #app{display:none}
 header{text-align:center;padding:20px;background:#000}
 .title{color:gold;font-size:36px}
 .container{padding:15px}
 .route{background:#1c1c1c;padding:10px;margin-bottom:10px;border-radius:6px}
 #map{height:350px;margin:10px 0;border-radius:8px}
-.btn{padding:8px;width:100%}
+input,button{padding:8px;margin-top:6px}
+.timeRow{background:#222;padding:6px;margin-top:6px;border-radius:4px}
 </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
 <div id="login">
   <h1>alle kan køre bil,<br>men det er ikke alle der har rettet</h1>
   <input id="pw" placeholder="Kodeord">
   <button onclick="login()">Log ind</button>
-  <p id="err" style="color:red;display:none">Forkert kode</p>
+  <p id="err">Forkert kodeord</p>
 </div>
 
+<!-- APP -->
 <div id="app">
 <header>
   <div class="title">TIME TRIALS</div>
@@ -45,7 +95,7 @@ header{text-align:center;padding:20px;background:#000}
 </header>
 
 <div class="container" id="routeList">
-  <button class="btn" onclick="addRoute()">➕ Tilføj rute</button>
+  <button onclick="addRoute()">➕ Tilføj rute</button>
 </div>
 
 <div class="container" id="routePage" style="display:none">
@@ -53,32 +103,42 @@ header{text-align:center;padding:20px;background:#000}
   <input id="routeName">
   <div id="routeLength">📏 Længde: –</div>
   <div id="map"></div>
+
+  <h3>Tider</h3>
+  <div id="times"></div>
+
+  <input id="nameInput" placeholder="Navn">
+  <input id="timeInput" placeholder="Tid (mm:ss)">
+  <input id="videoFile" type="file" accept="video/*">
+  <button onclick="addTime()">Gem tid (kræver video)</button>
 </div>
 </div>
 
 <script>
-// 🔥 FIREBASE
+// FIREBASE
 firebase.initializeApp({
   apiKey: "AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
   authDomain: "time-trials-b519e.firebaseapp.com",
   projectId: "time-trials-b519e",
+  storageBucket: "time-trials-b519e.firebasestorage.app"
 });
+
 const db = firebase.firestore();
+const storage = firebase.storage();
 
-// 🔐 LOGIN
+// LOGIN
 function login(){
-  if(pw.value==="AK47-DRIFT-TUNE"){
-    loginDiv.style.display="none";
+  if(pw.value === "AK47-DRIFT-TUNE"){
+    login.style.display="none";
     app.style.display="block";
-  } else err.style.display="block";
+  } else {
+    err.style.display="block";
+  }
 }
-const loginDiv=document.getElementById("login");
-const app=document.getElementById("app");
 
-// 📦 DATA
 let routes=[], current=null, map=null, router=null;
 
-// 🔄 LIVE DATA
+// LIVE DATA
 db.collection("routes").onSnapshot(snap=>{
   routes=[];
   snap.forEach(d=>routes.push({id:d.id,...d.data()}));
@@ -86,11 +146,11 @@ db.collection("routes").onSnapshot(snap=>{
 });
 
 function addRoute(){
-  db.collection("routes").add({name:"Ny rute",points:[],distance:0});
+  db.collection("routes").add({name:"Ny rute",points:[],times:[],distance:0});
 }
 
 function renderRoutes(){
-  routeList.innerHTML='<button class="btn" onclick="addRoute()">➕ Tilføj rute</button>';
+  routeList.innerHTML='<button onclick="addRoute()">➕ Tilføj rute</button>';
   routes.forEach(r=>{
     const d=document.createElement("div");
     d.className="route";
@@ -107,6 +167,7 @@ function openRoute(id){
   routePage.style.display="block";
   routeName.value=current.name;
   routeName.oninput=()=>db.collection("routes").doc(id).update({name:routeName.value});
+  renderTimes();
   initMap();
 }
 
@@ -130,7 +191,7 @@ function initMap(){
     if(pts.length>=2) return;
     pts.push([e.latlng.lat,e.latlng.lng]);
     router.setWaypoints(pts.map(p=>L.latLng(p[0],p[1])));
-    router.route(); // 🔥 DET VIGTIGE
+    router.route();
     db.collection("routes").doc(current.id).update({points:pts});
   });
 
@@ -141,10 +202,39 @@ function initMap(){
   });
 }
 
+async function addTime(){
+  if(!nameInput.value || !timeInput.value || !videoFile.files[0]){
+    alert("Video er påkrævet");
+    return;
+  }
+
+  const file=videoFile.files[0];
+  const ref=storage.ref("videos/"+Date.now()+"_"+file.name);
+  await ref.put(file);
+  const url=await ref.getDownloadURL();
+
+  current.times.push({name:nameInput.value,time:timeInput.value,video:url});
+  await db.collection("routes").doc(current.id).update({times:current.times});
+
+  nameInput.value=timeInput.value="";
+  videoFile.value="";
+}
+
+function renderTimes(){
+  times.innerHTML="";
+  (current.times||[]).forEach(t=>{
+    const d=document.createElement("div");
+    d.className="timeRow";
+    d.innerHTML=`${t.name} – ${t.time} <a href="${t.video}" target="_blank">🎥 Se video</a>`;
+    times.appendChild(d);
+  });
+}
+
 function back(){
   routePage.style.display="none";
   routeList.style.display="block";
 }
 </script>
+
 </body>
 </html>
