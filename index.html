@@ -60,7 +60,9 @@ input{width:100%;padding:8px;margin-bottom:6px;border-radius:5px;border:1px soli
   <button onclick="goBack()">⬅ Tilbage</button>
   <input id="routeName">
   <div id="routeLength" class="route-meta">📏 Længde: –</div>
+
   <div id="map"></div>
+  <button onclick="saveRoute()">💾 Gem rute</button>
 
   <h3>Tider</h3>
   <div id="times"></div>
@@ -90,7 +92,7 @@ function doLogin(){
 }
 
 /* ================= DATA ================= */
-let routes=[], current=null, map=null, router=null;
+let routes=[], current=null, map=null, router=null, localPoints=[];
 
 db.collection("routes").onSnapshot(s=>{
   routes=[];
@@ -123,7 +125,14 @@ function renderRoutes(){
 }
 
 function addRoute(){
-  db.collection("routes").add({name:"Ny rute",points:[],times:[],distance:0});
+  db.collection("routes").add({
+    name:"Ny rute",
+    points:[],
+    times:[],
+    distance:0,
+    mapCenter:null,
+    mapZoom:null
+  });
 }
 
 /* ================= RUTE ================= */
@@ -144,45 +153,57 @@ function goBack(){
   routeList.classList.remove("hidden");
 }
 
-/* ================= MAP (ENDGYLDIG FIX) ================= */
+/* ================= MAP ================= */
 function initMap(){
   if(map) map.remove();
 
-  map = L.map("map").setView([55.6761,12.5683],13);
+  const center = current.mapCenter || [55.6761,12.5683];
+  const zoom = current.mapZoom || 13;
+
+  map = L.map("map").setView(center, zoom);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-  const pts = [...(current.points||[])];
+  localPoints = [...(current.points || [])];
 
   router = L.Routing.control({
-    waypoints: pts.map(p=>L.latLng(p[0],p[1])),
-    routeWhileDragging:false,
+    waypoints: localPoints.map(p=>L.latLng(p[0],p[1])),
+    routeWhileDragging:true,
     draggableWaypoints:true,
     addWaypoints:false,
     show:false
   }).addTo(map);
 
-  if(pts.length===2){
-    setTimeout(()=>{
-      router.setWaypoints(pts.map(p=>L.latLng(p[0],p[1])));
-      router.route();
-    },100);
+  if(localPoints.length === 2){
+    setTimeout(()=>router.route(),100);
   }
 
-  if(pts.length<2){
-    map.on("click",e=>{
-      if(pts.length>=2) return;
-      pts.push([e.latlng.lat,e.latlng.lng]);
-      router.setWaypoints(pts.map(p=>L.latLng(p[0],p[1])));
-      router.route();
-      db.collection("routes").doc(current.id).update({points:pts});
-    });
-  }
+  map.on("click",e=>{
+    if(localPoints.length>=2) return;
+    localPoints.push([e.latlng.lat,e.latlng.lng]);
+    router.setWaypoints(localPoints.map(p=>L.latLng(p[0],p[1])));
+    router.route();
+  });
 
   router.on("routesfound",e=>{
     const d=e.routes[0].summary.totalDistance;
     routeLength.textContent="📏 Længde: "+(d/1000).toFixed(2)+" km";
-    db.collection("routes").doc(current.id).update({distance:d});
   });
+}
+
+/* ================= GEM RUTE ================= */
+function saveRoute(){
+  if(localPoints.length !== 2) return alert("Sæt 2 punkter først");
+
+  const center = map.getCenter();
+  const zoom = map.getZoom();
+
+  db.collection("routes").doc(current.id).update({
+    points: localPoints,
+    mapCenter: [center.lat, center.lng],
+    mapZoom: zoom
+  });
+
+  alert("Ruten er gemt 👍");
 }
 
 /* ================= RUNS ================= */
