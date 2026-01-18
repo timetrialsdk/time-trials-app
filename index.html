@@ -2,195 +2,50 @@
 <html lang="da">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TIME TRIALS</title>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<title>Login test</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#111;color:#eee}
-button{cursor:pointer;padding:8px 12px}
-.hidden{display:none}
-
-#loginScreen{
-  position:fixed;
-  inset:0;
+body{
   background:black;
+  color:white;
+  font-family:Arial;
   display:flex;
-  flex-direction:column;
   justify-content:center;
   align-items:center;
+  height:100vh;
 }
-
-#loginScreen h1{color:gold;font-size:36px;margin:0}
-#loginScreen p{color:#ccc;font-size:14px;margin:8px 0 16px}
-
-#loginScreen input{
-  width:200px;
-  padding:8px;
-  margin-bottom:6px;
-}
-
-header{
+#box{
   text-align:center;
-  padding:16px;
-  background:#000;
 }
-header h1{color:gold;margin:0}
-header p{color:#ddd;font-size:14px;margin:6px 0 0}
-
-.container{padding:16px}
-.route{background:#1c1c1c;padding:10px;border-radius:6px;margin-bottom:10px}
-.run{background:#222;padding:6px;border-radius:4px;margin-bottom:4px}
-
-input{
-  width:100%;
-  padding:8px;
-  margin-bottom:6px;
-  background:#222;
-  border:1px solid #333;
-  color:#eee;
-  border-radius:4px;
+input, button{
+  display:block;
+  margin:10px auto;
+  padding:10px;
+  width:220px;
 }
+h1{color:gold}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="loginScreen">
+<div id="box">
   <h1>TIME TRIALS</h1>
   <p>alle kan køre bilen, men ikke alle har rettet</p>
   <input id="pw" placeholder="Kodeord">
-  <button id="loginBtn" type="button">Log ind</button>
-</div>
-
-<!-- APP -->
-<div id="app" class="hidden">
-<header>
-  <h1>TIME TRIALS</h1>
-  <p>hvis du ikke ryster, var det ikke hurtigt nok</p>
-</header>
-
-<div class="container" id="routeList"></div>
-
-<div class="container hidden" id="routePage">
-  <button id="backBtn" type="button">⬅ Tilbage</button>
-
-  <input id="routeName" placeholder="Rutenavn">
-
-  <h3>Tilføj run</h3>
-  <input id="runName" placeholder="Navn">
-  <input id="runTime" placeholder="Tid (mm:ss)">
-  <input id="runVideo" placeholder="Video-link">
-  <button id="addRunBtn" type="button">Tilføj run</button>
-
-  <h3>Tider</h3>
-  <div id="runs"></div>
-</div>
+  <button id="btn">Log ind</button>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+document.getElementById("btn").onclick = function(){
+  const pw = document.getElementById("pw").value;
 
-  // FIREBASE
-  firebase.initializeApp({
-    apiKey:"AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
-    authDomain:"time-trials-b519e.firebaseapp.com",
-    projectId:"time-trials-b519e"
-  });
-  const db = firebase.firestore();
-
-  let currentRoute = null;
-
-  const loginScreen = document.getElementById("loginScreen");
-  const app = document.getElementById("app");
-  const routeList = document.getElementById("routeList");
-  const routePage = document.getElementById("routePage");
-  const runsDiv = document.getElementById("runs");
-
-  // LOGIN
-  document.getElementById("loginBtn").addEventListener("click", () => {
-    if(document.getElementById("pw").value === "AK47-DRIFT-TUNE"){
-      loginScreen.remove(); // 🔥 FJERNES HELT
-      app.classList.remove("hidden");
-      loadRoutes();
-    } else {
-      alert("Forkert kodeord");
-    }
-  });
-
-  async function loadRoutes(){
-    routeList.innerHTML = "";
-    const addBtn = document.createElement("button");
-    addBtn.textContent = "➕ Tilføj rute";
-    addBtn.onclick = addRoute;
-    routeList.appendChild(addBtn);
-
-    const snap = await db.collection("routes").get();
-    snap.forEach(doc => {
-      const r = doc.data();
-      const d = document.createElement("div");
-      d.className = "route";
-      d.innerHTML = `<b>${r.name || "Ny rute"}</b><br>`;
-      const open = document.createElement("button");
-      open.textContent = "Åbn";
-      open.onclick = () => openRoute(doc.id);
-      d.appendChild(open);
-      routeList.appendChild(d);
-    });
+  if(pw === "AK47-DRIFT-TUNE"){
+    alert("LOGIN VIRKER ✅");
+  } else {
+    alert("FORKERT KODE ❌");
   }
-
-  async function addRoute(){
-    await db.collection("routes").add({ name:"Ny rute", runs:[] });
-    loadRoutes();
-  }
-
-  async function openRoute(id){
-    const doc = await db.collection("routes").doc(id).get();
-    currentRoute = { id, ...doc.data() };
-
-    routeList.classList.add("hidden");
-    routePage.classList.remove("hidden");
-
-    renderRuns();
-  }
-
-  document.getElementById("backBtn").onclick = () => {
-    routePage.classList.add("hidden");
-    routeList.classList.remove("hidden");
-    loadRoutes();
-  };
-
-  document.getElementById("addRunBtn").addEventListener("click", async () => {
-    const name = runName.value.trim();
-    const time = runTime.value.trim();
-    const video = runVideo.value.trim();
-
-    if(!name || !time) return alert("Udfyld navn og tid");
-
-    const run = { name, time, video };
-    currentRoute.runs.push(run);
-    renderRuns();
-
-    await db.collection("routes").doc(currentRoute.id).update({
-      runs: currentRoute.runs
-    });
-
-    runName.value = runTime.value = runVideo.value = "";
-  });
-
-  function renderRuns(){
-    runsDiv.innerHTML = "";
-    currentRoute.runs.forEach(r => {
-      const d = document.createElement("div");
-      d.className = "run";
-      d.innerHTML = `<b>${r.name}</b> – ${r.time}`;
-      runsDiv.appendChild(d);
-    });
-  }
-
-});
+};
 </script>
+
 </body>
 </html>
