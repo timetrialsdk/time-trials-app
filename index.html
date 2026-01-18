@@ -19,7 +19,7 @@
 body{margin:0;font-family:Arial;background:#111;color:#eee}
 
 /* LOGIN */
-#login{
+#loginScreen{
   position:fixed;
   inset:0;
   background:black;
@@ -30,15 +30,14 @@ body{margin:0;font-family:Arial;background:#111;color:#eee}
   z-index:1000;
 }
 
-#login h1{
+#loginScreen h1{
   color:gold;
   text-align:center;
   margin-bottom:30px;
 }
 
-/* 🔥 SMÅ HVIDE FIRKANTER */
-#login input,
-#login button{
+#loginScreen input,
+#loginScreen button{
   width:260px;
   padding:12px;
   margin-top:12px;
@@ -47,19 +46,19 @@ body{margin:0;font-family:Arial;background:#111;color:#eee}
   font-size:16px;
 }
 
-#login input{
+#loginScreen input{
   background:#fff;
   color:#000;
 }
 
-#login button{
+#loginScreen button{
   background:#fff;
   color:#000;
   cursor:pointer;
   font-weight:bold;
 }
 
-#login p{
+#loginError{
   color:red;
   margin-top:10px;
   display:none;
@@ -72,7 +71,6 @@ header{text-align:center;padding:20px;background:#000}
 .container{padding:15px}
 .route{background:#1c1c1c;padding:10px;margin-bottom:10px;border-radius:6px}
 #map{height:350px;margin:10px 0;border-radius:8px}
-input,button{padding:8px;margin-top:6px}
 .timeRow{background:#222;padding:6px;margin-top:6px;border-radius:4px}
 </style>
 </head>
@@ -80,11 +78,11 @@ input,button{padding:8px;margin-top:6px}
 <body>
 
 <!-- LOGIN -->
-<div id="login">
+<div id="loginScreen">
   <h1>alle kan køre bil,<br>men det er ikke alle der har rettet</h1>
-  <input id="pw" placeholder="Kodeord">
-  <button onclick="login()">Log ind</button>
-  <p id="err">Forkert kodeord</p>
+  <input id="passwordInput" placeholder="Kodeord">
+  <button onclick="doLogin()">Log ind</button>
+  <div id="loginError">Forkert kodeord</div>
 </div>
 
 <!-- APP -->
@@ -99,7 +97,7 @@ input,button{padding:8px;margin-top:6px}
 </div>
 
 <div class="container" id="routePage" style="display:none">
-  <button onclick="back()">⬅ Tilbage</button>
+  <button onclick="goBack()">⬅ Tilbage</button>
   <input id="routeName">
   <div id="routeLength">📏 Længde: –</div>
   <div id="map"></div>
@@ -115,7 +113,7 @@ input,button{padding:8px;margin-top:6px}
 </div>
 
 <script>
-// FIREBASE
+// 🔥 FIREBASE
 firebase.initializeApp({
   apiKey: "AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
   authDomain: "time-trials-b519e.firebaseapp.com",
@@ -126,19 +124,21 @@ firebase.initializeApp({
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-// LOGIN
-function login(){
-  if(pw.value === "AK47-DRIFT-TUNE"){
-    login.style.display="none";
-    app.style.display="block";
+// 🔐 LOGIN
+function doLogin(){
+  const pw = document.getElementById("passwordInput").value;
+  if(pw === "AK47-DRIFT-TUNE"){
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("app").style.display = "block";
   } else {
-    err.style.display="block";
+    document.getElementById("loginError").style.display = "block";
   }
 }
 
+// 📦 DATA
 let routes=[], current=null, map=null, router=null;
 
-// LIVE DATA
+// 🔄 LIVE ROUTES
 db.collection("routes").onSnapshot(snap=>{
   routes=[];
   snap.forEach(d=>routes.push({id:d.id,...d.data()}));
@@ -230,7 +230,7 @@ function renderTimes(){
   });
 }
 
-function back(){
+function goBack(){
   routePage.style.display="none";
   routeList.style.display="block";
 }
