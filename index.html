@@ -58,16 +58,19 @@ input{
 
 <script>
 /* ---------- STORAGE ---------- */
-function save(){
-  localStorage.setItem("time_trials_routes", JSON.stringify(routes));
+const STORAGE_KEY = "time_trials_routes";
+
+function saveRoutes(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(routes));
 }
-function load(){
-  const data = localStorage.getItem("time_trials_routes");
+
+function loadRoutes(){
+  const data = localStorage.getItem(STORAGE_KEY);
   return data ? JSON.parse(data) : [];
 }
 
 /* ---------- STATE ---------- */
-let routes = load();
+let routes = loadRoutes();
 let currentRouteIndex = null;
 
 /* ---------- ELEMENTS ---------- */
@@ -79,7 +82,7 @@ const runsDiv = document.getElementById("runs");
 /* ---------- ADD ROUTE ---------- */
 document.getElementById("addRoute").onclick = () => {
   routes.push({ name: "Ny rute", runs: [] });
-  save();
+  saveRoutes();
   renderRoutes();
 };
 
@@ -127,7 +130,7 @@ document.getElementById("addRun").onclick = () => {
   }
 
   routes[currentRouteIndex].runs.push({ name, time, video });
-  save();
+  saveRoutes();
 
   document.getElementById("name").value = "";
   document.getElementById("time").value = "";
