@@ -20,49 +20,18 @@ body{margin:0;font-family:Arial;background:#111;color:#eee}
 
 /* LOGIN */
 #loginScreen{
-  position:fixed;
-  inset:0;
-  background:black;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  z-index:1000;
+  position:fixed; inset:0; background:black;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center; z-index:1000;
 }
-
-#loginScreen h1{
-  color:gold;
-  text-align:center;
-  margin-bottom:30px;
+#loginScreen h1{color:gold;text-align:center;margin-bottom:30px}
+#loginScreen input,#loginScreen button{
+  width:260px;padding:12px;margin-top:12px;
+  border-radius:6px;border:none;font-size:16px
 }
-
-#loginScreen input,
-#loginScreen button{
-  width:260px;
-  padding:12px;
-  margin-top:12px;
-  border-radius:6px;
-  border:none;
-  font-size:16px;
-}
-
-#loginScreen input{
-  background:#fff;
-  color:#000;
-}
-
-#loginScreen button{
-  background:#fff;
-  color:#000;
-  cursor:pointer;
-  font-weight:bold;
-}
-
-#loginError{
-  color:red;
-  margin-top:10px;
-  display:none;
-}
+#loginScreen input{background:#fff;color:#000}
+#loginScreen button{background:#fff;color:#000;font-weight:bold;cursor:pointer}
+#loginError{color:red;display:none;margin-top:10px}
 
 /* APP */
 #app{display:none}
@@ -72,6 +41,8 @@ header{text-align:center;padding:20px;background:#000}
 .route{background:#1c1c1c;padding:10px;margin-bottom:10px;border-radius:6px}
 #map{height:350px;margin:10px 0;border-radius:8px}
 .timeRow{background:#222;padding:6px;margin-top:6px;border-radius:4px}
+button{padding:8px;margin-top:6px}
+input{padding:8px;margin-top:6px;width:100%}
 </style>
 </head>
 
@@ -108,7 +79,7 @@ header{text-align:center;padding:20px;background:#000}
   <input id="nameInput" placeholder="Navn">
   <input id="timeInput" placeholder="Tid (mm:ss)">
   <input id="videoFile" type="file" accept="video/*">
-  <button onclick="addTime()">Gem tid (kræver video)</button>
+  <button id="saveRunBtn" onclick="saveRun()">Tilføj</button>
 </div>
 </div>
 
@@ -126,19 +97,17 @@ const storage = firebase.storage();
 
 // 🔐 LOGIN
 function doLogin(){
-  const pw = document.getElementById("passwordInput").value;
-  if(pw === "AK47-DRIFT-TUNE"){
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("app").style.display = "block";
-  } else {
-    document.getElementById("loginError").style.display = "block";
-  }
+  const pw=document.getElementById("passwordInput").value;
+  if(pw==="AK47-DRIFT-TUNE"){
+    loginScreen.style.display="none";
+    app.style.display="block";
+  } else loginError.style.display="block";
 }
 
-// 📦 DATA
+// DATA
 let routes=[], current=null, map=null, router=null;
 
-// 🔄 LIVE ROUTES
+// LIVE ROUTES
 db.collection("routes").onSnapshot(snap=>{
   routes=[];
   snap.forEach(d=>routes.push({id:d.id,...d.data()}));
@@ -173,7 +142,6 @@ function openRoute(id){
 
 function initMap(){
   if(map) map.remove();
-
   map=L.map("map").setView([55.6761,12.5683],13);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
@@ -186,7 +154,6 @@ function initMap(){
   }).addTo(map);
 
   let pts=[];
-
   map.on("click",e=>{
     if(pts.length>=2) return;
     pts.push([e.latlng.lat,e.latlng.lng]);
@@ -202,22 +169,37 @@ function initMap(){
   });
 }
 
-async function addTime(){
-  if(!nameInput.value || !timeInput.value || !videoFile.files[0]){
-    alert("Video er påkrævet");
+// ⏱ GEM RUN + VIDEO
+async function saveRun(){
+  if(!nameInput.value||!timeInput.value||!videoFile.files[0]){
+    alert("Navn, tid og video er påkrævet");
     return;
   }
 
-  const file=videoFile.files[0];
-  const ref=storage.ref("videos/"+Date.now()+"_"+file.name);
-  await ref.put(file);
-  const url=await ref.getDownloadURL();
+  const btn=document.getElementById("saveRunBtn");
+  btn.disabled=true;
+  btn.textContent="Uploader...";
 
-  current.times.push({name:nameInput.value,time:timeInput.value,video:url});
-  await db.collection("routes").doc(current.id).update({times:current.times});
+  try{
+    const file=videoFile.files[0];
+    const ref=storage.ref("videos/"+current.id+"/"+Date.now()+"_"+file.name);
+    await ref.put(file);
+    const url=await ref.getDownloadURL();
 
-  nameInput.value=timeInput.value="";
-  videoFile.value="";
+    const run={name:nameInput.value,time:timeInput.value,video:url};
+    const updated=[...(current.times||[]),run];
+
+    await db.collection("routes").doc(current.id).update({times:updated});
+
+    nameInput.value=timeInput.value="";
+    videoFile.value="";
+    btn.textContent="Tilføj";
+    btn.disabled=false;
+  }catch(err){
+    alert("Fejl ved upload");
+    btn.disabled=false;
+    btn.textContent="Tilføj";
+  }
 }
 
 function renderTimes(){
