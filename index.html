@@ -26,6 +26,8 @@ button{cursor:pointer}
   flex-direction:column;
   justify-content:center;
   align-items:center;
+  z-index:1000;
+  pointer-events:auto;
 }
 #loginScreen h1{
   color:gold;
@@ -111,12 +113,10 @@ input{
   <button onclick="back()">⬅ Tilbage</button>
   <input id="routeName" placeholder="Rutenavn">
 
-  <!-- ROUTE IMAGE -->
   <h3>Rute screenshot</h3>
   <input type="file" accept="image/*" onchange="uploadImage(event)">
   <img id="routeImage" class="route-image hidden">
 
-  <!-- RUNS -->
   <h3>Tilføj run</h3>
   <input id="runName" placeholder="Navn">
   <input id="runTime" placeholder="Tid (mm:ss)">
@@ -141,9 +141,13 @@ let currentRoute=null;
 
 /* LOGIN */
 function login(){
-  if(pw.value==="AK47-DRIFT-TUNE"){
+  const pwInput = document.getElementById("pw");
+  const loginScreen = document.getElementById("loginScreen");
+
+  if(pwInput.value==="AK47-DRIFT-TUNE"){
     loginScreen.style.display="none";
-    app.style.display="block";
+    loginScreen.style.pointerEvents="none";
+    document.getElementById("app").style.display="block";
     loadRoutes();
   } else {
     alert("Forkert kodeord");
@@ -152,7 +156,9 @@ function login(){
 
 /* LOAD ROUTES */
 async function loadRoutes(){
-  routeList.innerHTML='<button onclick="addRoute()">➕ Tilføj rute</button>';
+  const list=document.getElementById("routeList");
+  list.innerHTML='<button onclick="addRoute()">➕ Tilføj rute</button>';
+
   const snap=await db.collection("routes").get();
   snap.forEach(doc=>{
     const r=doc.data();
@@ -162,7 +168,7 @@ async function loadRoutes(){
       <b>${r.name||"Ny rute"}</b><br>
       <button onclick="openRoute('${doc.id}')">Åbn</button>
     `;
-    routeList.appendChild(d);
+    list.appendChild(d);
   });
 }
 
@@ -181,12 +187,13 @@ async function openRoute(id){
   const doc=await db.collection("routes").doc(id).get();
   currentRoute={id,...doc.data()};
 
-  routeList.classList.add("hidden");
-  routePage.classList.remove("hidden");
+  document.getElementById("routeList").classList.add("hidden");
+  document.getElementById("routePage").classList.remove("hidden");
 
-  routeName.value=currentRoute.name||"";
-  routeName.oninput=()=>{
-    db.collection("routes").doc(id).update({name:routeName.value});
+  const rn=document.getElementById("routeName");
+  rn.value=currentRoute.name||"";
+  rn.oninput=()=>{
+    db.collection("routes").doc(id).update({name:rn.value});
   };
 
   if(currentRoute.image){
@@ -199,7 +206,7 @@ async function openRoute(id){
   renderRuns();
 }
 
-/* UPLOAD IMAGE (SCREENSHOT) */
+/* UPLOAD IMAGE */
 function uploadImage(e){
   const file=e.target.files[0];
   if(!file) return;
@@ -211,7 +218,7 @@ function uploadImage(e){
 
     currentRoute.image=reader.result;
     await db.collection("routes").doc(currentRoute.id).update({
-      image: reader.result
+      image:reader.result
     });
   };
   reader.readAsDataURL(file);
