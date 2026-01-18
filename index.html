@@ -125,25 +125,30 @@ function openRoute(id){
 
 function initMap(){
   if(map) map.remove();
+
   map = L.map('map').setView([55.6761,12.5683],13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
+  // Routing control (uden klik-tilføjelse)
   router = L.Routing.control({
     waypoints: (current.points||[]).map(p=>L.latLng(p[0],p[1])),
     routeWhileDragging:true,
     draggableWaypoints:true,
-    addWaypoints:true,
+    addWaypoints:false,
     show:false
   }).addTo(map);
 
-  // Klik for start/slut
+  // Manuel klik-logik (100% stabil)
+  let clickPoints = [...(current.points||[])];
+
   map.on('click', e => {
-    const pts = current.points || [];
-    if (pts.length < 2) {
-      pts.push([e.latlng.lat, e.latlng.lng]);
-      db.collection('routes').doc(current.id).update({ points: pts });
-      router.setWaypoints(pts.map(p => L.latLng(p[0], p[1])));
-    }
+    if(clickPoints.length >= 2) return;
+
+    clickPoints.push([e.latlng.lat, e.latlng.lng]);
+
+    router.setWaypoints(clickPoints.map(p => L.latLng(p[0], p[1])));
+
+    db.collection('routes').doc(current.id).update({ points: clickPoints });
   });
 
   router.on('routesfound', e => {
