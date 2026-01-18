@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Time Trials</title>
+<title>TIME TRIALS</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -11,13 +11,16 @@
 <style>
 body{
   margin:0;
-  font-family:Arial;
+  font-family:Arial, sans-serif;
   background:#111;
   color:#eee;
 }
-button{cursor:pointer}
 
-/* LOGIN */
+button{
+  cursor:pointer;
+  padding:8px 12px;
+}
+
 #loginScreen{
   position:fixed;
   inset:0;
@@ -26,53 +29,68 @@ button{cursor:pointer}
   flex-direction:column;
   justify-content:center;
   align-items:center;
-  z-index:1000;
-  pointer-events:auto;
+  z-index:10;
 }
+
 #loginScreen h1{
   color:gold;
   font-size:36px;
-  margin-bottom:6px;
-}
-#loginScreen p{
-  color:#ccc;
-  font-size:14px;
-  margin-bottom:15px;
-}
-#loginScreen input,
-#loginScreen button{
-  width:180px;
-  padding:8px;
-  font-size:14px;
-  margin:5px;
+  margin:0;
 }
 
-/* APP */
-#app{display:none}
+#loginScreen p{
+  color:#ccc;
+  margin:8px 0 16px;
+  font-size:14px;
+}
+
+#loginScreen input,
+#loginScreen button{
+  width:200px;
+  margin:4px;
+}
+
+#app{
+  display:none;
+}
+
 header{
   text-align:center;
-  padding:15px;
+  padding:16px;
   background:#000;
-  color:gold;
-  font-size:28px;
 }
-.container{padding:15px}
+
+header h1{
+  color:gold;
+  margin:0;
+  font-size:34px;
+}
+
+header p{
+  margin:6px 0 0;
+  font-size:14px;
+  color:#ddd;
+}
+
+.container{
+  padding:16px;
+}
 
 .route{
   background:#1c1c1c;
   padding:10px;
-  border-radius:6px;
   margin-bottom:10px;
+  border-radius:6px;
 }
 
 input{
   width:100%;
   padding:8px;
   margin-bottom:6px;
-  border-radius:5px;
-  border:1px solid #333;
   background:#222;
+  border:1px solid #333;
   color:#eee;
+  border-radius:4px;
 }
 
 .run{
@@ -86,11 +104,13 @@ input{
   width:100%;
   max-height:300px;
   object-fit:cover;
-  border-radius:8px;
-  margin:10px 0;
+  border-radius:6px;
+  margin-bottom:10px;
 }
 
-.hidden{display:none}
+.hidden{
+  display:none;
+}
 </style>
 </head>
 <body>
@@ -100,28 +120,32 @@ input{
   <h1>TIME TRIALS</h1>
   <p>alle kan køre bilen, men ikke alle har rettet</p>
   <input id="pw" placeholder="Kodeord">
-  <button onclick="login()">Log ind</button>
+  <button id="loginBtn">Log ind</button>
 </div>
 
 <!-- APP -->
 <div id="app">
-<header>TIME TRIALS</header>
+<header>
+  <h1>TIME TRIALS</h1>
+  <p>hvis du ikke ryster, var det ikke hurtigt nok</p>
+</header>
 
 <div class="container" id="routeList"></div>
 
 <div class="container hidden" id="routePage">
-  <button onclick="back()">⬅ Tilbage</button>
+  <button id="backBtn">⬅ Tilbage</button>
+
   <input id="routeName" placeholder="Rutenavn">
 
   <h3>Rute screenshot</h3>
-  <input type="file" accept="image/*" onchange="uploadImage(event)">
+  <input type="file" id="imageInput" accept="image/*">
   <img id="routeImage" class="route-image hidden">
 
   <h3>Tilføj run</h3>
   <input id="runName" placeholder="Navn">
   <input id="runTime" placeholder="Tid (mm:ss)">
   <input id="runVideo" placeholder="Video-link">
-  <button onclick="addRun()">Tilføj run</button>
+  <button id="addRunBtn">Tilføj run</button>
 
   <h3>Tider</h3>
   <div id="runs"></div>
@@ -129,7 +153,7 @@ input{
 </div>
 
 <script>
-/* FIREBASE */
+// FIREBASE
 firebase.initializeApp({
   apiKey:"AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
   authDomain:"time-trials-b519e.firebaseapp.com",
@@ -137,42 +161,44 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-let currentRoute=null;
+// STATE
+let currentRoute = null;
 
-/* LOGIN */
-function login(){
-  const pwInput = document.getElementById("pw");
-  const loginScreen = document.getElementById("loginScreen");
+// ELEMENTER
+const loginScreen = document.getElementById("loginScreen");
+const app = document.getElementById("app");
+const routeList = document.getElementById("routeList");
+const routePage = document.getElementById("routePage");
 
-  if(pwInput.value==="AK47-DRIFT-TUNE"){
-    loginScreen.style.display="none";
-    loginScreen.style.pointerEvents="none";
-    document.getElementById("app").style.display="block";
+// LOGIN
+document.getElementById("loginBtn").onclick = async () => {
+  const pw = document.getElementById("pw").value;
+  if(pw === "AK47-DRIFT-TUNE"){
+    loginScreen.style.display = "none";
+    app.style.display = "block";
     loadRoutes();
   } else {
     alert("Forkert kodeord");
   }
-}
+};
 
-/* LOAD ROUTES */
+// LOAD ROUTES
 async function loadRoutes(){
-  const list=document.getElementById("routeList");
-  list.innerHTML='<button onclick="addRoute()">➕ Tilføj rute</button>';
-
-  const snap=await db.collection("routes").get();
-  snap.forEach(doc=>{
-    const r=doc.data();
-    const d=document.createElement("div");
-    d.className="route";
-    d.innerHTML=`
-      <b>${r.name||"Ny rute"}</b><br>
+  routeList.innerHTML = '<button onclick="addRoute()">➕ Tilføj rute</button>';
+  const snap = await db.collection("routes").get();
+  snap.forEach(doc => {
+    const r = doc.data();
+    const d = document.createElement("div");
+    d.className = "route";
+    d.innerHTML = `
+      <b>${r.name || "Ny rute"}</b><br>
       <button onclick="openRoute('${doc.id}')">Åbn</button>
     `;
-    list.appendChild(d);
+    routeList.appendChild(d);
   });
 }
 
-/* ADD ROUTE */
+// ADD ROUTE
 async function addRoute(){
   await db.collection("routes").add({
     name:"Ny rute",
@@ -182,22 +208,22 @@ async function addRoute(){
   loadRoutes();
 }
 
-/* OPEN ROUTE */
+// OPEN ROUTE
 async function openRoute(id){
-  const doc=await db.collection("routes").doc(id).get();
-  currentRoute={id,...doc.data()};
+  const doc = await db.collection("routes").doc(id).get();
+  currentRoute = { id, ...doc.data() };
 
-  document.getElementById("routeList").classList.add("hidden");
-  document.getElementById("routePage").classList.remove("hidden");
+  routeList.classList.add("hidden");
+  routePage.classList.remove("hidden");
 
-  const rn=document.getElementById("routeName");
-  rn.value=currentRoute.name||"";
-  rn.oninput=()=>{
-    db.collection("routes").doc(id).update({name:rn.value});
+  const rn = document.getElementById("routeName");
+  rn.value = currentRoute.name || "";
+  rn.oninput = () => {
+    db.collection("routes").doc(id).update({ name: rn.value });
   };
 
   if(currentRoute.image){
-    routeImage.src=currentRoute.image;
+    routeImage.src = currentRoute.image;
     routeImage.classList.remove("hidden");
   } else {
     routeImage.classList.add("hidden");
@@ -206,62 +232,61 @@ async function openRoute(id){
   renderRuns();
 }
 
-/* UPLOAD IMAGE */
-function uploadImage(e){
-  const file=e.target.files[0];
-  if(!file) return;
-
-  const reader=new FileReader();
-  reader.onload=async ()=>{
-    routeImage.src=reader.result;
-    routeImage.classList.remove("hidden");
-
-    currentRoute.image=reader.result;
-    await db.collection("routes").doc(currentRoute.id).update({
-      image:reader.result
-    });
-  };
-  reader.readAsDataURL(file);
-}
-
-/* ADD RUN */
-async function addRun(){
-  if(!runName.value||!runTime.value) return;
-
-  const run={
-    name:runName.value,
-    time:runTime.value,
-    video:runVideo.value
-  };
-
-  currentRoute.runs.push(run);
-  await db.collection("routes").doc(currentRoute.id).update({
-    runs:currentRoute.runs
-  });
-
-  runName.value=runTime.value=runVideo.value="";
-  renderRuns();
-}
-
-/* RENDER RUNS */
-function renderRuns(){
-  runs.innerHTML="";
-  currentRoute.runs.forEach(r=>{
-    const d=document.createElement("div");
-    d.className="run";
-    d.innerHTML=`
-      <b>${r.name}</b> – ${r.time}
-      ${r.video?` · <a href="${r.video}" target="_blank">🎥</a>`:""}
-    `;
-    runs.appendChild(d);
-  });
-}
-
-/* BACK */
-function back(){
+// BACK
+document.getElementById("backBtn").onclick = () => {
   routePage.classList.add("hidden");
   routeList.classList.remove("hidden");
   loadRoutes();
+};
+
+// UPLOAD IMAGE
+document.getElementById("imageInput").onchange = e => {
+  const file = e.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    routeImage.src = reader.result;
+    routeImage.classList.remove("hidden");
+    currentRoute.image = reader.result;
+    await db.collection("routes").doc(currentRoute.id).update({
+      image: reader.result
+    });
+  };
+  reader.readAsDataURL(file);
+};
+
+// ADD RUN (FIKSET – KAN ALTID KLIKKES)
+document.getElementById("addRunBtn").onclick = async () => {
+  const name = runName.value;
+  const time = runTime.value;
+  const video = runVideo.value;
+
+  if(!name || !time) return alert("Udfyld navn og tid");
+
+  const run = { name, time, video };
+
+  currentRoute.runs.push(run);
+  await db.collection("routes").doc(currentRoute.id).update({
+    runs: currentRoute.runs
+  });
+
+  runName.value = runTime.value = runVideo.value = "";
+  renderRuns();
+};
+
+// RENDER RUNS
+function renderRuns(){
+  runs.innerHTML = "";
+  currentRoute.runs.forEach(r => {
+    const d = document.createElement("div");
+    d.className = "run";
+    d.innerHTML = `
+      <b>${r.name}</b> – ${r.time}
+      ${r.video ? ` · <a href="${r.video}" target="_blank">🎥</a>` : ""}
+    `;
+    runs.appendChild(d);
+  });
 }
 </script>
 </body>
