@@ -75,7 +75,7 @@ input{width:100%;padding:8px;margin-bottom:6px;border-radius:5px;border:1px soli
 </div>
 
 <script>
-/* ================= FIREBASE ================= */
+/* ===== FIREBASE ===== */
 firebase.initializeApp({
   apiKey:"AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
   authDomain:"time-trials-b519e.firebaseapp.com",
@@ -83,7 +83,7 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-/* ================= LOGIN ================= */
+/* ===== LOGIN ===== */
 function doLogin(){
   if(pw.value === "AK47-DRIFT-TUNE"){
     loginScreen.style.display="none";
@@ -91,7 +91,7 @@ function doLogin(){
   }
 }
 
-/* ================= DATA ================= */
+/* ===== DATA ===== */
 let routes=[], current=null, map=null, router=null, localPoints=[];
 
 db.collection("routes").onSnapshot(s=>{
@@ -105,7 +105,7 @@ function toSec(t){
   return m*60+s;
 }
 
-/* ================= FORSIDE ================= */
+/* ===== FORSIDE ===== */
 function renderRoutes(){
   routeList.innerHTML='<button onclick="addRoute()">➕ Tilføj rute</button>';
   routes.forEach(r=>{
@@ -135,7 +135,7 @@ function addRoute(){
   });
 }
 
-/* ================= RUTE ================= */
+/* ===== RUTE ===== */
 function openRoute(id){
   current = routes.find(r=>r.id===id);
   routeList.classList.add("hidden");
@@ -153,7 +153,7 @@ function goBack(){
   routeList.classList.remove("hidden");
 }
 
-/* ================= MAP ================= */
+/* ===== MAP ===== */
 function initMap(){
   if(map) map.remove();
 
@@ -190,23 +190,31 @@ function initMap(){
   });
 }
 
-/* ================= GEM RUTE ================= */
-function saveRoute(){
-  if(localPoints.length !== 2) return alert("Sæt 2 punkter først");
+/* ===== GEM RUTE (FIXET) ===== */
+async function saveRoute(){
+  if(localPoints.length !== 2){
+    alert("Sæt 2 punkter før du kan gemme ruten");
+    return;
+  }
 
   const center = map.getCenter();
   const zoom = map.getZoom();
 
-  db.collection("routes").doc(current.id).update({
+  await db.collection("routes").doc(current.id).update({
     points: localPoints,
     mapCenter: [center.lat, center.lng],
     mapZoom: zoom
   });
 
+  // 🔑 OPDATER LOKAL STATE
+  current.points = [...localPoints];
+  current.mapCenter = [center.lat, center.lng];
+  current.mapZoom = zoom;
+
   alert("Ruten er gemt 👍");
 }
 
-/* ================= RUNS ================= */
+/* ===== RUNS ===== */
 function addRun(){
   if(!nameInput.value||!timeInput.value) return;
   current.times.push({
