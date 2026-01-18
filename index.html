@@ -17,14 +17,14 @@ button{
 }
 input{
   display:block;
-  width:250px;
+  width:260px;
   padding:10px;
   margin:5px 0;
 }
-.run{
+.route, .run{
   background:#222;
-  padding:6px;
-  margin:4px 0;
+  padding:8px;
+  margin:6px 0;
 }
 </style>
 </head>
@@ -35,21 +35,78 @@ input{
 
 <hr>
 
-<h2>Tilføj run</h2>
+<!-- ROUTE LIST -->
+<div id="routesView">
+  <button id="addRoute">➕ Tilføj rute</button>
+  <div id="routes"></div>
+</div>
 
-<input id="name" placeholder="Navn">
-<input id="time" placeholder="Tid (mm:ss)">
-<input id="video" placeholder="Video-link">
+<!-- ROUTE PAGE -->
+<div id="routeView" style="display:none">
+  <button id="back">⬅ Tilbage</button>
+  <h2 id="routeTitle"></h2>
 
-<button id="btn">Tilføj run</button>
+  <h3>Tilføj run</h3>
+  <input id="name" placeholder="Navn">
+  <input id="time" placeholder="Tid (mm:ss)">
+  <input id="video" placeholder="Video-link">
+  <button id="addRun">Tilføj run</button>
 
-<h3>Tider</h3>
-<div id="list"></div>
+  <h3>Tider</h3>
+  <div id="runs"></div>
+</div>
 
 <script>
-const runs = [];
+/* STATE */
+const routes = [];
+let currentRoute = null;
 
-document.getElementById("btn").onclick = () => {
+/* ELEMENTS */
+const routesView = document.getElementById("routesView");
+const routeView = document.getElementById("routeView");
+const routesDiv = document.getElementById("routes");
+const runsDiv = document.getElementById("runs");
+
+/* ADD ROUTE */
+document.getElementById("addRoute").onclick = () => {
+  const route = { name: "Ny rute", runs: [] };
+  routes.push(route);
+  renderRoutes();
+};
+
+/* RENDER ROUTES */
+function renderRoutes(){
+  routesDiv.innerHTML = "";
+  routes.forEach((r, i) => {
+    const d = document.createElement("div");
+    d.className = "route";
+    d.innerHTML = `<b>${r.name}</b>`;
+    const btn = document.createElement("button");
+    btn.textContent = "Åbn";
+    btn.onclick = () => openRoute(i);
+    d.appendChild(document.createElement("br"));
+    d.appendChild(btn);
+    routesDiv.appendChild(d);
+  });
+}
+
+/* OPEN ROUTE */
+function openRoute(index){
+  currentRoute = routes[index];
+  document.getElementById("routeTitle").textContent = currentRoute.name;
+  routesView.style.display = "none";
+  routeView.style.display = "block";
+  renderRuns();
+}
+
+/* BACK */
+document.getElementById("back").onclick = () => {
+  routeView.style.display = "none";
+  routesView.style.display = "block";
+};
+
+/* ADD RUN */
+document.getElementById("addRun").onclick = () => {
   const name = document.getElementById("name").value;
   const time = document.getElementById("time").value;
   const video = document.getElementById("video").value;
@@ -59,23 +116,23 @@ document.getElementById("btn").onclick = () => {
     return;
   }
 
-  runs.push({name, time, video});
+  currentRoute.runs.push({ name, time, video });
 
   document.getElementById("name").value = "";
   document.getElementById("time").value = "";
   document.getElementById("video").value = "";
 
-  render();
+  renderRuns();
 };
 
-function render(){
-  const list = document.getElementById("list");
-  list.innerHTML = "";
-  runs.forEach(r => {
+/* RENDER RUNS */
+function renderRuns(){
+  runsDiv.innerHTML = "";
+  currentRoute.runs.forEach(r => {
     const d = document.createElement("div");
     d.className = "run";
     d.innerHTML = `<b>${r.name}</b> – ${r.time} ${r.video ? "🎥" : ""}`;
-    list.appendChild(d);
+    runsDiv.appendChild(d);
   });
 }
 </script>
