@@ -20,13 +20,11 @@
   <style>
     body{margin:0;font-family:Arial;background:#111;color:#eee}
     button{cursor:pointer}
-
     #login{position:fixed;inset:0;background:black;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:1000}
     #login h1{color:gold;font-size:32px;text-align:center;max-width:80%}
     #login input{padding:12px;font-size:16px;margin-top:20px;width:260px;text-align:center}
     #login button{margin-top:15px;padding:10px 30px;font-size:16px}
     #login p{color:red;display:none}
-
     #app{display:none}
     header{text-align:center;padding:20px;background:#000;border-bottom:2px solid #333}
     .title{font-size:38px;font-weight:900;color:gold;text-shadow:0 0 14px rgba(255,215,0,.75);margin:0}
@@ -37,9 +35,6 @@
     .route-meta{font-size:13px;color:#aaa}
     .btn-full{width:100%;padding:8px}
     .btn-delete{width:30px;height:30px;background:#c82333;color:#fff;border:none;border-radius:5px}
-    .gold{color:gold}
-    .silver{color:#d0d0d0}
-    .bronze{color:#cd7f32}
     input{background:#222;color:#eee;border:1px solid #333;border-radius:5px;padding:8px;width:100%;margin-bottom:6px}
     #map{height:350px;border-radius:8px;margin:10px 0}
     .hidden{display:none}
@@ -97,7 +92,6 @@ loginBtn.onclick = () => {
   else loginErr.style.display='block';
 };
 
-// DATA
 let routes = [];
 let current = null;
 let map, router;
@@ -109,10 +103,7 @@ db.collection('routes').onSnapshot(snap => {
   renderRoutes();
 });
 
-function addRoute(){
-  db.collection('routes').add({ name:'Ny rute', points:[], times:[], distance:0 });
-}
-
+function addRoute(){ db.collection('routes').add({ name:'Ny rute', points:[], times:[], distance:0 }); }
 function deleteRoute(id){ db.collection('routes').doc(id).delete(); }
 
 function renderRoutes(){
@@ -136,7 +127,25 @@ function initMap(){
   if(map) map.remove();
   map = L.map('map').setView([55.6761,12.5683],13);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-  router = L.Routing.control({ waypoints: current.points.map(p=>L.latLng(p[0],p[1])), routeWhileDragging:true, draggableWaypoints:true, addWaypoints:false, show:false }).addTo(map);
+
+  router = L.Routing.control({
+    waypoints: (current.points||[]).map(p=>L.latLng(p[0],p[1])),
+    routeWhileDragging:true,
+    draggableWaypoints:true,
+    addWaypoints:true,
+    show:false
+  }).addTo(map);
+
+  // Klik for start/slut
+  map.on('click', e => {
+    const pts = current.points || [];
+    if (pts.length < 2) {
+      pts.push([e.latlng.lat, e.latlng.lng]);
+      db.collection('routes').doc(current.id).update({ points: pts });
+      router.setWaypoints(pts.map(p => L.latLng(p[0], p[1])));
+    }
+  });
+
   router.on('routesfound', e => {
     const pts = router.getWaypoints().map(w=>[w.latLng.lat,w.latLng.lng]);
     const dist = e.routes[0].summary.totalDistance;
