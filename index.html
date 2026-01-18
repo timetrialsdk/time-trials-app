@@ -2,190 +2,83 @@
 <html lang="da">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TIME TRIALS</title>
+<title>Time Trials</title>
 
 <style>
 body{
-  margin:0;
-  font-family:Arial, sans-serif;
   background:#111;
-  color:#eee;
+  color:white;
+  font-family:Arial;
+  padding:20px;
 }
 button{
-  padding:8px 14px;
-  cursor:pointer;
-}
-.hidden{display:none}
-
-/* LOGIN */
-#login{
-  position:fixed;
-  inset:0;
-  background:black;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-}
-#login h1{color:gold;margin:0;font-size:36px}
-#login p{color:#ccc;margin:8px 0 16px}
-#login input{width:220px;padding:10px;margin-bottom:10px}
-
-/* HEADER */
-header{
-  background:#000;
-  text-align:center;
-  padding:16px;
-}
-header h1{color:gold;margin:0}
-header p{color:#ddd;margin-top:6px;font-size:14px}
-
-/* CONTENT */
-.container{padding:16px}
-.route{
-  background:#1c1c1c;
   padding:10px;
-  border-radius:6px;
-  margin-bottom:10px;
+  margin:5px 0;
+}
+input{
+  display:block;
+  width:250px;
+  padding:10px;
+  margin:5px 0;
 }
 .run{
   background:#222;
   padding:6px;
-  border-radius:4px;
-  margin-bottom:4px;
-}
-
-input{
-  width:100%;
-  padding:8px;
-  margin-bottom:6px;
-  background:#222;
-  border:1px solid #333;
-  color:#eee;
-  border-radius:4px;
+  margin:4px 0;
 }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
-<div id="login">
-  <h1>TIME TRIALS</h1>
-  <p>alle kan køre bilen, men ikke alle har rettet</p>
-  <input id="pw" placeholder="Kodeord">
-  <button id="loginBtn">Log ind</button>
-</div>
+<h1 style="color:gold">TIME TRIALS</h1>
+<p>hvis du ikke ryster, var det ikke hurtigt nok</p>
 
-<!-- APP -->
-<div id="app" class="hidden">
-<header>
-  <h1>TIME TRIALS</h1>
-  <p>hvis du ikke ryster, var det ikke hurtigt nok</p>
-</header>
+<hr>
 
-<div class="container" id="routesView">
-  <button id="addRouteBtn">➕ Tilføj rute</button>
-  <div id="routes"></div>
-</div>
+<h2>Tilføj run</h2>
 
-<div class="container hidden" id="routeView">
-  <button id="backBtn">⬅ Tilbage</button>
-  <h3 id="routeTitle"></h3>
+<input id="name" placeholder="Navn">
+<input id="time" placeholder="Tid (mm:ss)">
+<input id="video" placeholder="Video-link">
 
-  <h4>Tilføj run</h4>
-  <input id="runName" placeholder="Navn">
-  <input id="runTime" placeholder="Tid (mm:ss)">
-  <input id="runVideo" placeholder="Video-link">
-  <button id="addRunBtn">Tilføj run</button>
+<button id="btn">Tilføj run</button>
 
-  <h4>Tider</h4>
-  <div id="runs"></div>
-</div>
-</div>
+<h3>Tider</h3>
+<div id="list"></div>
 
 <script>
-/* ---------- STATE ---------- */
-let routes = [];
-let currentRouteIndex = null;
+const runs = [];
 
-/* ---------- LOGIN ---------- */
-document.getElementById("loginBtn").onclick = () => {
-  const pw = document.getElementById("pw").value;
-  if(pw === "AK47-DRIFT-TUNE"){
-    document.getElementById("login").style.display = "none";
-    document.getElementById("app").classList.remove("hidden");
-    renderRoutes();
-  } else {
-    alert("Forkert kodeord");
-  }
-};
-
-/* ---------- ROUTES ---------- */
-document.getElementById("addRouteBtn").onclick = () => {
-  routes.push({
-    name: "Ny rute",
-    runs: []
-  });
-  renderRoutes();
-};
-
-function renderRoutes(){
-  const list = document.getElementById("routes");
-  list.innerHTML = "";
-
-  routes.forEach((r, i) => {
-    const div = document.createElement("div");
-    div.className = "route";
-    div.innerHTML = `<b>${r.name}</b><br>`;
-    const btn = document.createElement("button");
-    btn.textContent = "Åbn";
-    btn.onclick = () => openRoute(i);
-    div.appendChild(btn);
-    list.appendChild(div);
-  });
-}
-
-function openRoute(index){
-  currentRouteIndex = index;
-  document.getElementById("routesView").classList.add("hidden");
-  document.getElementById("routeView").classList.remove("hidden");
-  document.getElementById("routeTitle").textContent = routes[index].name;
-  renderRuns();
-}
-
-/* ---------- RUNS ---------- */
-document.getElementById("addRunBtn").onclick = () => {
-  const name = runName.value.trim();
-  const time = runTime.value.trim();
-  const video = runVideo.value.trim();
+document.getElementById("btn").onclick = () => {
+  const name = document.getElementById("name").value;
+  const time = document.getElementById("time").value;
+  const video = document.getElementById("video").value;
 
   if(!name || !time){
     alert("Udfyld navn og tid");
     return;
   }
 
-  routes[currentRouteIndex].runs.push({ name, time, video });
-  runName.value = runTime.value = runVideo.value = "";
-  renderRuns();
+  runs.push({name, time, video});
+
+  document.getElementById("name").value = "";
+  document.getElementById("time").value = "";
+  document.getElementById("video").value = "";
+
+  render();
 };
 
-function renderRuns(){
-  const box = document.getElementById("runs");
-  box.innerHTML = "";
-  routes[currentRouteIndex].runs.forEach(r => {
+function render(){
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  runs.forEach(r => {
     const d = document.createElement("div");
     d.className = "run";
-    d.innerHTML = `<b>${r.name}</b> – ${r.time} ${r.video ? `· <a href="${r.video}" target="_blank">🎥</a>` : ""}`;
-    box.appendChild(d);
+    d.innerHTML = `<b>${r.name}</b> – ${r.time} ${r.video ? "🎥" : ""}`;
+    list.appendChild(d);
   });
 }
-
-/* ---------- BACK ---------- */
-document.getElementById("backBtn").onclick = () => {
-  document.getElementById("routeView").classList.add("hidden");
-  document.getElementById("routesView").classList.remove("hidden");
-};
 </script>
+
 </body>
 </html>
