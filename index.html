@@ -5,72 +5,81 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TIME TRIALS</title>
 
+<!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css">
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Routing -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css">
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 
 <style>
 body{margin:0;font-family:Arial;background:#111;color:#eee}
+button{cursor:pointer}
 
-/* LOGIN */
-#loginScreen{
-  position:fixed; inset:0; background:black;
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center; z-index:1000;
+#login{
+  position:fixed;inset:0;background:black;
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;z-index:1000
 }
-#loginScreen h1{color:gold;text-align:center;margin-bottom:30px}
-#loginScreen input,#loginScreen button{
-  width:260px;padding:12px;margin-top:12px;
-  border-radius:6px;border:none;font-size:16px
+#login h1{color:gold;text-align:center;margin-bottom:30px}
+#login input,#login button{
+  width:260px;padding:12px;margin:6px;border-radius:6px;border:none
 }
-#loginScreen input{background:#fff;color:#000}
-#loginScreen button{background:#fff;color:#000;font-weight:bold;cursor:pointer}
-#loginError{color:red;display:none;margin-top:10px}
 
-/* APP */
 #app{display:none}
 header{text-align:center;padding:20px;background:#000}
-.title{color:gold;font-size:36px}
+.title{font-size:38px;color:gold}
+.subtitle{color:#ccc}
+
 .container{padding:15px}
-.route{background:#1c1c1c;padding:10px;margin-bottom:10px;border-radius:6px}
-#map{height:350px;margin:10px 0;border-radius:8px}
-.timeRow{background:#222;padding:6px;margin-top:6px;border-radius:4px}
-button{padding:8px;margin-top:6px}
-input{padding:8px;margin-top:6px;width:100%}
+.route{background:#1c1c1c;padding:12px;border-radius:8px;margin-bottom:12px}
+.route-meta{font-size:13px;color:#aaa}
+.btn-delete{background:#c82333;border:none;color:#fff;border-radius:4px;padding:4px 8px}
+
+#map{height:350px;border-radius:8px;margin:10px 0}
+.hidden{display:none}
+
+input{
+  width:100%;padding:8px;margin-bottom:6px;
+  border-radius:5px;border:1px solid #333;
+  background:#222;color:#eee
+}
+
+.timeRow{
+  background:#222;padding:6px;margin-top:6px;
+  border-radius:4px
+}
 </style>
 </head>
-
 <body>
 
 <!-- LOGIN -->
-<div id="loginScreen">
+<div id="login">
   <h1>alle kan køre bil,<br>men det er ikke alle der har rettet</h1>
-  <input id="passwordInput" placeholder="Kodeord">
-  <button onclick="doLogin()">Log ind</button>
-  <div id="loginError">Forkert kodeord</div>
+  <input id="pw" type="password" placeholder="Kodeord">
+  <button onclick="login()">Log ind</button>
 </div>
 
 <!-- APP -->
 <div id="app">
 <header>
   <div class="title">TIME TRIALS</div>
-  <em>hvis ikke du ryster, var det ikke hurtigt nok</em>
+  <div class="subtitle"><em>hvis ikke du ryster, var det ikke hurtigt nok</em></div>
 </header>
 
 <div class="container" id="routeList">
   <button onclick="addRoute()">➕ Tilføj rute</button>
 </div>
 
-<div class="container" id="routePage" style="display:none">
-  <button onclick="goBack()">⬅ Tilbage</button>
+<div class="container hidden" id="routePage">
+  <button onclick="back()">⬅ Tilbage</button>
   <input id="routeName">
-  <div id="routeLength">📏 Længde: –</div>
+  <div id="routeLength" class="route-meta">📏 Længde: –</div>
   <div id="map"></div>
 
   <h3>Tider</h3>
@@ -78,145 +87,144 @@ input{padding:8px;margin-top:6px;width:100%}
 
   <input id="nameInput" placeholder="Navn">
   <input id="timeInput" placeholder="Tid (mm:ss)">
-  <input id="videoFile" type="file" accept="video/*">
-  <button id="saveRunBtn" onclick="saveRun()">Tilføj</button>
+  <input id="videoInput" placeholder="Video-link (YouTube / Drive)">
+  <button onclick="addTime()">Tilføj run</button>
 </div>
 </div>
 
 <script>
-// 🔥 FIREBASE
+// FIREBASE
 firebase.initializeApp({
   apiKey: "AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
   authDomain: "time-trials-b519e.firebaseapp.com",
-  projectId: "time-trials-b519e",
-  storageBucket: "time-trials-b519e.firebasestorage.app"
+  projectId: "time-trials-b519e"
 });
-
 const db = firebase.firestore();
-const storage = firebase.storage();
 
-// 🔐 LOGIN
-function doLogin(){
-  const pw=document.getElementById("passwordInput").value;
-  if(pw==="AK47-DRIFT-TUNE"){
-    loginScreen.style.display="none";
-    app.style.display="block";
-  } else loginError.style.display="block";
+// LOGIN
+function login(){
+  if(pw.value==="AK47-DRIFT-TUNE"){
+    document.getElementById("login").style.display="none";
+    document.getElementById("app").style.display="block";
+  }
 }
 
 // DATA
-let routes=[], current=null, map=null, router=null;
+let routes=[],current=null,map,router;
 
-// LIVE ROUTES
-db.collection("routes").onSnapshot(snap=>{
+// REALTIME ROUTES
+db.collection("routes").onSnapshot(s=>{
   routes=[];
-  snap.forEach(d=>routes.push({id:d.id,...d.data()}));
+  s.forEach(d=>routes.push({id:d.id,...d.data()}));
   renderRoutes();
 });
 
+// ROUTES
 function addRoute(){
-  db.collection("routes").add({name:"Ny rute",points:[],times:[],distance:0});
+  db.collection("routes").add({
+    name:"Ny rute",
+    points:[],
+    times:[],
+    distance:0
+  });
 }
-
+function deleteRoute(id){
+  db.collection("routes").doc(id).delete();
+}
 function renderRoutes(){
   routeList.innerHTML='<button onclick="addRoute()">➕ Tilføj rute</button>';
   routes.forEach(r=>{
     const d=document.createElement("div");
     d.className="route";
-    d.innerHTML=`<b>${r.name}</b><br>
-    📏 ${(r.distance/1000||0).toFixed(2)} km<br>
-    <button onclick="openRoute('${r.id}')">Åbn</button>`;
+    d.innerHTML=`
+      <b>${r.name}</b>
+      <div class="route-meta">📏 ${(r.distance/1000||0).toFixed(2)} km</div>
+      <button onclick="openRoute('${r.id}')">Åbn</button>
+      <button class="btn-delete" onclick="deleteRoute('${r.id}')">🗑</button>
+    `;
     routeList.appendChild(d);
   });
 }
 
+// ROUTE PAGE
 function openRoute(id){
   current=routes.find(r=>r.id===id);
-  routeList.style.display="none";
-  routePage.style.display="block";
+  routeList.classList.add("hidden");
+  routePage.classList.remove("hidden");
   routeName.value=current.name;
   routeName.oninput=()=>db.collection("routes").doc(id).update({name:routeName.value});
   renderTimes();
   initMap();
 }
+function back(){
+  routePage.classList.add("hidden");
+  routeList.classList.remove("hidden");
+}
 
+// MAP
 function initMap(){
   if(map) map.remove();
   map=L.map("map").setView([55.6761,12.5683],13);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
+  let pts=[...(current.points||[])];
   router=L.Routing.control({
-    waypoints:[],
+    waypoints:pts.map(p=>L.latLng(p[0],p[1])),
     routeWhileDragging:true,
     draggableWaypoints:true,
     addWaypoints:false,
     show:false
   }).addTo(map);
 
-  let pts=[];
   map.on("click",e=>{
     if(pts.length>=2) return;
     pts.push([e.latlng.lat,e.latlng.lng]);
     router.setWaypoints(pts.map(p=>L.latLng(p[0],p[1])));
-    router.route();
     db.collection("routes").doc(current.id).update({points:pts});
   });
 
   router.on("routesfound",e=>{
-    const d=e.routes[0].summary.totalDistance;
-    routeLength.textContent="📏 Længde: "+(d/1000).toFixed(2)+" km";
-    db.collection("routes").doc(current.id).update({distance:d});
+    const dist=e.routes[0].summary.totalDistance;
+    routeLength.textContent="📏 Længde: "+(dist/1000).toFixed(2)+" km";
+    db.collection("routes").doc(current.id).update({distance:dist});
   });
 }
 
-// ⏱ GEM RUN + VIDEO
-async function saveRun(){
-  if(!nameInput.value||!timeInput.value||!videoFile.files[0]){
-    alert("Navn, tid og video er påkrævet");
-    return;
-  }
-
-  const btn=document.getElementById("saveRunBtn");
-  btn.disabled=true;
-  btn.textContent="Uploader...";
-
-  try{
-    const file=videoFile.files[0];
-    const ref=storage.ref("videos/"+current.id+"/"+Date.now()+"_"+file.name);
-    await ref.put(file);
-    const url=await ref.getDownloadURL();
-
-    const run={name:nameInput.value,time:timeInput.value,video:url};
-    const updated=[...(current.times||[]),run];
-
-    await db.collection("routes").doc(current.id).update({times:updated});
-
-    nameInput.value=timeInput.value="";
-    videoFile.value="";
-    btn.textContent="Tilføj";
-    btn.disabled=false;
-  }catch(err){
-    alert("Fejl ved upload");
-    btn.disabled=false;
-    btn.textContent="Tilføj";
-  }
+// TIDER + MEDALJER
+function addTime(){
+  if(!nameInput.value||!timeInput.value) return;
+  current.times.push({
+    name:nameInput.value,
+    time:timeInput.value,
+    video:videoInput.value
+  });
+  db.collection("routes").doc(current.id).update({times:current.times});
+  nameInput.value=timeInput.value=videoInput.value="";
 }
 
 function renderTimes(){
   times.innerHTML="";
-  (current.times||[]).forEach(t=>{
+
+  const sorted=[...(current.times||[])].sort((a,b)=>{
+    const toSec=t=>{const [m,s]=t.split(":").map(Number);return m*60+s};
+    return toSec(a.time)-toSec(b.time);
+  });
+
+  sorted.forEach((t,i)=>{
+    let medal="";
+    if(i===0) medal="🥇";
+    else if(i===1) medal="🥈";
+    else if(i===2) medal="🥉";
+
     const d=document.createElement("div");
     d.className="timeRow";
-    d.innerHTML=`${t.name} – ${t.time} <a href="${t.video}" target="_blank">🎥 Se video</a>`;
+    d.innerHTML=`
+      <b>${medal} ${t.name}</b> – ${t.time}
+      ${t.video?` · <a href="${t.video}" target="_blank">🎥 Se video</a>`:""}
+    `;
     times.appendChild(d);
   });
 }
-
-function goBack(){
-  routePage.style.display="none";
-  routeList.style.display="block";
-}
 </script>
-
 </body>
 </html>
