@@ -3,47 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TIME TRIALS</title>
+<title>Time Trials</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#111;color:#eee}
+body{
+  margin:0;
+  font-family:Arial;
+  background:#111;
+  color:#eee;
+}
 button{cursor:pointer}
 
 #loginScreen{
-  position:fixed;inset:0;background:black;
-  display:flex;flex-direction:column;
-  justify-content:center;align-items:center;
-  z-index:1000
+  position:fixed;
+  inset:0;
+  background:black;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  z-index:1000;
 }
-#loginScreen h1{color:gold;margin-bottom:20px}
-#loginScreen input{
-  width:180px;
-  padding:8px;
-  font-size:14px;
-  margin-bottom:8px;
+#loginScreen h1{
+  color:gold;
+  font-size:20px;
+  text-align:center;
+  margin-bottom:15px;
 }
+#loginScreen input,
 #loginScreen button{
   width:180px;
   padding:8px;
   font-size:14px;
+  margin:5px;
 }
 
 #app{display:none}
-header{text-align:center;padding:20px;background:#000}
-.title{font-size:34px;color:gold}
+
+header{
+  text-align:center;
+  padding:15px;
+  background:#000;
+  color:gold;
+  font-size:28px;
+}
 
 .container{padding:15px}
-.route{background:#1c1c1c;padding:12px;margin-bottom:10px;border-radius:6px}
 
-#map{height:300px;margin:10px 0;border-radius:8px}
+.route{
+  background:#1c1c1c;
+  padding:10px;
+  border-radius:6px;
+  margin-bottom:10px;
+}
 
 input{
   width:100%;
@@ -52,7 +70,7 @@ input{
   border-radius:5px;
   border:1px solid #333;
   background:#222;
-  color:#eee
+  color:#eee;
 }
 
 .run{
@@ -61,6 +79,13 @@ input{
   border-radius:4px;
   margin-bottom:4px;
 }
+
+#map{
+  height:250px;
+  border-radius:8px;
+  margin:10px 0;
+}
+
 .hidden{display:none}
 </style>
 </head>
@@ -68,16 +93,14 @@ input{
 
 <!-- LOGIN -->
 <div id="loginScreen">
-  <h1>TIME TRIALS</h1>
+  <h1>alle kan køre bilen<br>men ik alle har rettet</h1>
   <input id="pw" placeholder="Kodeord">
   <button onclick="login()">Log ind</button>
 </div>
 
 <!-- APP -->
 <div id="app">
-<header>
-  <div class="title">TIME TRIALS</div>
-</header>
+<header>TIME TRIALS</header>
 
 <div class="container" id="routeList"></div>
 
@@ -99,6 +122,7 @@ input{
 </div>
 
 <script>
+/* FIREBASE */
 firebase.initializeApp({
   apiKey:"AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
   authDomain:"time-trials-b519e.firebaseapp.com",
@@ -106,30 +130,38 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-let currentRoute=null;
+/* STATE */
+let currentRoute = null;
+let map = null;
 
 /* LOGIN */
 function login(){
-  if(pw.value==="AK47-DRIFT-TUNE"){
-    loginScreen.style.display="none";
-    app.style.display="block";
+  const passwordInput = document.getElementById("pw");
+
+  if(passwordInput.value === "AK47-DRIFT-TUNE"){
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("app").style.display = "block";
     loadRoutes();
+  } else {
+    alert("Forkert kodeord");
   }
 }
 
 /* LOAD ROUTES */
 async function loadRoutes(){
-  routeList.innerHTML='<button onclick="addRoute()">➕ Tilføj rute</button>';
-  const snap=await db.collection("routes").get();
+  const list = document.getElementById("routeList");
+  list.innerHTML = '<button onclick="addRoute()">➕ Tilføj rute</button>';
+
+  const snap = await db.collection("routes").get();
   snap.forEach(doc=>{
-    const r=doc.data();
-    const d=document.createElement("div");
-    d.className="route";
-    d.innerHTML=`
-      <b>${r.name||"Ny rute"}</b><br>
+    const r = doc.data();
+    const div = document.createElement("div");
+    div.className = "route";
+    div.innerHTML = `
+      <b>${r.name || "Ny rute"}</b><br>
       <button onclick="openRoute('${doc.id}')">Åbn</button>
     `;
-    routeList.appendChild(d);
+    list.appendChild(div);
   });
 }
 
@@ -137,69 +169,78 @@ async function loadRoutes(){
 async function addRoute(){
   await db.collection("routes").add({
     name:"Ny rute",
-    runs:[],
-    points:[],
-    mapCenter:null,
-    mapZoom:null
+    runs:[]
   });
   loadRoutes();
 }
 
 /* OPEN ROUTE */
 async function openRoute(id){
-  const doc=await db.collection("routes").doc(id).get();
-  currentRoute={id,...doc.data()};
+  const doc = await db.collection("routes").doc(id).get();
+  currentRoute = { id, ...doc.data() };
 
-  routeList.classList.add("hidden");
-  routePage.classList.remove("hidden");
+  document.getElementById("routeList").classList.add("hidden");
+  document.getElementById("routePage").classList.remove("hidden");
 
-  routeName.value=currentRoute.name;
-  routeName.oninput=()=>{
-    db.collection("routes").doc(id).update({name:routeName.value});
+  document.getElementById("routeName").value = currentRoute.name || "";
+  document.getElementById("routeName").oninput = () => {
+    db.collection("routes").doc(id).update({
+      name: document.getElementById("routeName").value
+    });
   };
 
+  initMap();
   renderRuns();
+}
+
+/* MAP (VISUEL – IKKE GEMME) */
+function initMap(){
+  if(map) map.remove();
+  map = L.map("map").setView([55.6761, 12.5683], 13);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 }
 
 /* ADD RUN */
 async function addRun(){
-  if(!runName.value||!runTime.value) return;
+  if(!runName.value || !runTime.value) return;
 
-  const newRun={
-    name:runName.value,
-    time:runTime.value,
-    video:runVideo.value
+  const newRun = {
+    name: runName.value,
+    time: runTime.value,
+    video: runVideo.value
   };
 
-  currentRoute.runs=currentRoute.runs||[];
+  currentRoute.runs = currentRoute.runs || [];
   currentRoute.runs.push(newRun);
 
   await db.collection("routes").doc(currentRoute.id).update({
-    runs:currentRoute.runs
+    runs: currentRoute.runs
   });
 
-  runName.value=runTime.value=runVideo.value="";
+  runName.value = runTime.value = runVideo.value = "";
   renderRuns();
 }
 
 /* RENDER RUNS */
 function renderRuns(){
-  runs.innerHTML="";
-  (currentRoute.runs||[]).forEach(r=>{
-    const d=document.createElement("div");
-    d.className="run";
-    d.innerHTML=`
+  const container = document.getElementById("runs");
+  container.innerHTML = "";
+
+  (currentRoute.runs || []).forEach(r=>{
+    const d = document.createElement("div");
+    d.className = "run";
+    d.innerHTML = `
       <b>${r.name}</b> – ${r.time}
-      ${r.video?` · <a href="${r.video}" target="_blank">🎥</a>`:""}
+      ${r.video ? ` · <a href="${r.video}" target="_blank">🎥</a>` : ""}
     `;
-    runs.appendChild(d);
+    container.appendChild(d);
   });
 }
 
 /* BACK */
 function back(){
-  routePage.classList.add("hidden");
-  routeList.classList.remove("hidden");
+  document.getElementById("routePage").classList.add("hidden");
+  document.getElementById("routeList").classList.remove("hidden");
   loadRoutes();
 }
 </script>
