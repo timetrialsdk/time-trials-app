@@ -7,7 +7,6 @@
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css">
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
@@ -17,16 +16,52 @@
 <style>
 body{margin:0;font-family:Arial;background:#111;color:#eee}
 button{cursor:pointer}
-#loginScreen{position:fixed;inset:0;background:black;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:1000}
-#loginScreen h1{color:gold}
+
+#loginScreen{
+  position:fixed;inset:0;background:black;
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  z-index:1000
+}
+#loginScreen h1{color:gold;margin-bottom:20px}
+#loginScreen input{
+  width:180px;
+  padding:8px;
+  font-size:14px;
+  margin-bottom:8px;
+}
+#loginScreen button{
+  width:180px;
+  padding:8px;
+  font-size:14px;
+}
+
 #app{display:none}
 header{text-align:center;padding:20px;background:#000}
-.title{font-size:36px;color:gold}
+.title{font-size:34px;color:gold}
+
 .container{padding:15px}
 .route{background:#1c1c1c;padding:12px;margin-bottom:10px;border-radius:6px}
-#map{height:350px;margin:10px 0;border-radius:8px}
+
+#map{height:300px;margin:10px 0;border-radius:8px}
+
+input{
+  width:100%;
+  padding:8px;
+  margin-bottom:6px;
+  border-radius:5px;
+  border:1px solid #333;
+  background:#222;
+  color:#eee
+}
+
+.run{
+  background:#222;
+  padding:6px;
+  border-radius:4px;
+  margin-bottom:4px;
+}
 .hidden{display:none}
-input{width:100%;padding:8px;margin-bottom:6px;border-radius:5px;border:1px solid #333;background:#222;color:#eee}
 </style>
 </head>
 <body>
@@ -49,13 +84,21 @@ input{width:100%;padding:8px;margin-bottom:6px;border-radius:5px;border:1px soli
 <div class="container hidden" id="routePage">
   <button onclick="back()">⬅ Tilbage</button>
   <input id="routeName">
+
   <div id="map"></div>
-  <button onclick="saveRoute()">💾 Gem rute</button>
+
+  <h3>Tilføj run</h3>
+  <input id="runName" placeholder="Navn">
+  <input id="runTime" placeholder="Tid (mm:ss)">
+  <input id="runVideo" placeholder="Video-link">
+  <button onclick="addRun()">Tilføj run</button>
+
+  <h3>Tider</h3>
+  <div id="runs"></div>
 </div>
 </div>
 
 <script>
-/* ================= FIREBASE ================= */
 firebase.initializeApp({
   apiKey:"AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
   authDomain:"time-trials-b519e.firebaseapp.com",
@@ -63,42 +106,38 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-/* ================= STATE ================= */
-let currentRoute = null;
-let map = null;
-let router = null;
-let currentWaypoints = [];
+let currentRoute=null;
 
-/* ================= LOGIN ================= */
+/* LOGIN */
 function login(){
-  if(pw.value === "AK47-DRIFT-TUNE"){
-    loginScreen.style.display = "none";
-    app.style.display = "block";
+  if(pw.value==="AK47-DRIFT-TUNE"){
+    loginScreen.style.display="none";
+    app.style.display="block";
     loadRoutes();
   }
 }
 
-/* ================= LOAD ROUTES ================= */
+/* LOAD ROUTES */
 async function loadRoutes(){
-  routeList.innerHTML = '<button onclick="addRoute()">➕ Tilføj rute</button>';
-  const snap = await db.collection("routes").get();
-
+  routeList.innerHTML='<button onclick="addRoute()">➕ Tilføj rute</button>';
+  const snap=await db.collection("routes").get();
   snap.forEach(doc=>{
-    const r = doc.data();
-    const div = document.createElement("div");
-    div.className = "route";
-    div.innerHTML = `
-      <b>${r.name || "Ny rute"}</b><br>
+    const r=doc.data();
+    const d=document.createElement("div");
+    d.className="route";
+    d.innerHTML=`
+      <b>${r.name||"Ny rute"}</b><br>
       <button onclick="openRoute('${doc.id}')">Åbn</button>
     `;
-    routeList.appendChild(div);
+    routeList.appendChild(d);
   });
 }
 
-/* ================= ADD ROUTE ================= */
+/* ADD ROUTE */
 async function addRoute(){
   await db.collection("routes").add({
     name:"Ny rute",
+    runs:[],
     points:[],
     mapCenter:null,
     mapZoom:null
@@ -106,84 +145,58 @@ async function addRoute(){
   loadRoutes();
 }
 
-/* ================= OPEN ROUTE ================= */
+/* OPEN ROUTE */
 async function openRoute(id){
-  const doc = await db.collection("routes").doc(id).get();
-  currentRoute = { id, ...doc.data() };
+  const doc=await db.collection("routes").doc(id).get();
+  currentRoute={id,...doc.data()};
 
   routeList.classList.add("hidden");
   routePage.classList.remove("hidden");
 
-  routeName.value = currentRoute.name || "";
-  routeName.oninput = () => {
-    db.collection("routes").doc(id).update({ name: routeName.value });
+  routeName.value=currentRoute.name;
+  routeName.oninput=()=>{
+    db.collection("routes").doc(id).update({name:routeName.value});
   };
 
-  initMap();
+  renderRuns();
 }
 
-/* ================= MAP (KORREKT WAYPOINT-LOGIK) ================= */
-function initMap(){
-  if(map) map.remove();
+/* ADD RUN */
+async function addRun(){
+  if(!runName.value||!runTime.value) return;
 
-  const center = currentRoute.mapCenter || [55.6761, 12.5683];
-  const zoom = currentRoute.mapZoom || 13;
+  const newRun={
+    name:runName.value,
+    time:runTime.value,
+    video:runVideo.value
+  };
 
-  map = L.map("map").setView(center, zoom);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
-
-  currentWaypoints = [...(currentRoute.points || [])];
-
-  router = L.Routing.control({
-    waypoints: currentWaypoints.map(p => L.latLng(p[0], p[1])),
-    draggableWaypoints: true,
-    addWaypoints: false,
-    routeWhileDragging: true,
-    show:false
-  }).addTo(map);
-
-  // 🔑 ROUTEREN BESTEMMER DE FAKTISKE WAYPOINTS
-  router.on("routesfound", () => {
-    currentWaypoints = router.getWaypoints().map(w => [
-      w.latLng.lat,
-      w.latLng.lng
-    ]);
-  });
-
-  // Klik kun hvis der mangler punkter
-  map.on("click", e => {
-    if(currentWaypoints.length >= 2) return;
-
-    currentWaypoints.push([e.latlng.lat, e.latlng.lng]);
-    router.setWaypoints(currentWaypoints.map(p => L.latLng(p[0], p[1])));
-    router.route();
-  });
-}
-
-/* ================= SAVE ROUTE (STABIL) ================= */
-async function saveRoute(){
-  if(currentWaypoints.length !== 2){
-    alert("Sæt 2 punkter før du gemmer ruten");
-    return;
-  }
-
-  const center = map.getCenter();
+  currentRoute.runs=currentRoute.runs||[];
+  currentRoute.runs.push(newRun);
 
   await db.collection("routes").doc(currentRoute.id).update({
-    points: currentWaypoints,
-    mapCenter: [center.lat, center.lng],
-    mapZoom: map.getZoom()
+    runs:currentRoute.runs
   });
 
-  // Lokal sync
-  currentRoute.points = [...currentWaypoints];
-  currentRoute.mapCenter = [center.lat, center.lng];
-  currentRoute.mapZoom = map.getZoom();
-
-  alert("Ruten er gemt korrekt ✅");
+  runName.value=runTime.value=runVideo.value="";
+  renderRuns();
 }
 
-/* ================= BACK ================= */
+/* RENDER RUNS */
+function renderRuns(){
+  runs.innerHTML="";
+  (currentRoute.runs||[]).forEach(r=>{
+    const d=document.createElement("div");
+    d.className="run";
+    d.innerHTML=`
+      <b>${r.name}</b> – ${r.time}
+      ${r.video?` · <a href="${r.video}" target="_blank">🎥</a>`:""}
+    `;
+    runs.appendChild(d);
+  });
+}
+
+/* BACK */
 function back(){
   routePage.classList.add("hidden");
   routeList.classList.remove("hidden");
