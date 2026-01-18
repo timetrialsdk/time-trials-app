@@ -17,9 +17,16 @@
 <style>
 body{margin:0;font-family:Arial;background:#111;color:#eee}
 button{cursor:pointer}
-#login{position:fixed;inset:0;background:black;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:1000}
-#login h1{color:gold;text-align:center;margin-bottom:30px}
-#login input,#login button{width:260px;padding:12px;margin:6px;border-radius:6px;border:none}
+
+#loginScreen{
+  position:fixed;inset:0;background:black;
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;z-index:1000
+}
+#loginScreen h1{color:gold;text-align:center;margin-bottom:30px}
+#loginScreen input,#loginScreen button{
+  width:260px;padding:12px;margin:6px;border-radius:6px;border:none
+}
 
 #app{display:none}
 header{text-align:center;padding:20px;background:#000}
@@ -40,12 +47,14 @@ input{width:100%;padding:8px;margin-bottom:6px;border-radius:5px;border:1px soli
 </head>
 <body>
 
-<div id="login">
+<!-- LOGIN -->
+<div id="loginScreen">
   <h1>alle kan køre bil,<br>men det er ikke alle der har rettet</h1>
   <input id="pw" type="password" placeholder="Kodeord">
-  <button onclick="login()">Log ind</button>
+  <button onclick="doLogin()">Log ind</button>
 </div>
 
+<!-- APP -->
 <div id="app">
 <header>
   <div class="title">TIME TRIALS</div>
@@ -78,13 +87,15 @@ firebase.initializeApp({
 });
 const db=firebase.firestore();
 
-function login(){
+/* 🔐 LOGIN */
+function doLogin(){
   if(pw.value==="AK47-DRIFT-TUNE"){
-    login.style.display="none";
-    app.style.display="block";
+    document.getElementById("loginScreen").style.display="none";
+    document.getElementById("app").style.display="block";
   }
 }
 
+/* DATA */
 let routes=[],current=null,map=null,router=null;
 
 db.collection("routes").onSnapshot(s=>{
@@ -98,15 +109,11 @@ function toSec(t){
   return m*60+s;
 }
 
-/* ===== FORSIDE MED MEDALJER ===== */
+/* FORSIDE */
 function renderRoutes(){
   routeList.innerHTML='<button onclick="addRoute()">➕ Tilføj rute</button>';
-
   routes.forEach(r=>{
-    const top3=[...(r.times||[])]
-      .sort((a,b)=>toSec(a.time)-toSec(b.time))
-      .slice(0,3);
-
+    const top3=[...(r.times||[])].sort((a,b)=>toSec(a.time)-toSec(b.time)).slice(0,3);
     const d=document.createElement("div");
     d.className="route";
     d.innerHTML=`
@@ -125,15 +132,13 @@ function addRoute(){
   db.collection("routes").add({name:"Ny rute",points:[],times:[],distance:0});
 }
 
-/* ===== RUTE ===== */
+/* RUTE */
 function openRoute(id){
   current=routes.find(r=>r.id===id);
   routeList.classList.add("hidden");
   routePage.classList.remove("hidden");
-
   routeName.value=current.name;
   routeName.oninput=()=>db.collection("routes").doc(id).update({name:routeName.value});
-
   renderTimes();
   initMap();
 }
@@ -143,15 +148,13 @@ function back(){
   routeList.classList.remove("hidden");
 }
 
-/* ===== KORT (STABIL) ===== */
+/* KORT */
 function initMap(){
   if(map) map.remove();
-
   map=L.map("map").setView([55.6761,12.5683],13);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
   const pts=[...(current.points||[])];
-
   router=L.Routing.control({
     waypoints:pts.map(p=>L.latLng(p[0],p[1])),
     routeWhileDragging:false,
@@ -160,9 +163,7 @@ function initMap(){
     show:false
   }).addTo(map);
 
-  if(pts.length===2){
-    router.route();
-  }
+  if(pts.length===2) router.route();
 
   if(pts.length<2){
     map.on("click",e=>{
@@ -181,7 +182,7 @@ function initMap(){
   });
 }
 
-/* ===== TIDER ===== */
+/* TIDER */
 function addTime(){
   if(!nameInput.value||!timeInput.value) return;
   current.times.push({name:nameInput.value,time:timeInput.value,video:videoInput.value});
@@ -191,8 +192,7 @@ function addTime(){
 
 function renderTimes(){
   times.innerHTML="";
-  [...(current.times||[])]
-    .sort((a,b)=>toSec(a.time)-toSec(b.time))
+  [...(current.times||[])].sort((a,b)=>toSec(a.time)-toSec(b.time))
     .forEach((t,i)=>{
       const d=document.createElement("div");
       d.className="timeRow";
