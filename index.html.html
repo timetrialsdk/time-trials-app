@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TIME TRIALS</title>
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Routing -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+  <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <style>
+    body{margin:0;font-family:Arial;background:#111;color:#eee}
+    button{cursor:pointer}
+
+    #login{position:fixed;inset:0;background:black;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:1000}
+    #login h1{color:gold;font-size:32px;text-align:center;max-width:80%}
+    #login input{padding:12px;font-size:16px;margin-top:20px;width:260px;text-align:center}
+    #login button{margin-top:15px;padding:10px 30px;font-size:16px}
+    #login p{color:red;display:none}
+
+    #app{display:none}
+    header{text-align:center;padding:20px;background:#000;border-bottom:2px solid #333}
+    .title{font-size:38px;font-weight:900;color:gold;text-shadow:0 0 14px rgba(255,215,0,.75);margin:0}
+    .subtitle{color:#ccc;font-size:14px;margin-top:6px}
+    .container{padding:15px}
+    .route{background:#1c1c1c;padding:12px;border-radius:8px;margin-bottom:12px}
+    .route b{text-shadow:0 0 6px rgba(255,255,255,.25)}
+    .route-meta{font-size:13px;color:#aaa}
+    .btn-full{width:100%;padding:8px}
+    .btn-delete{width:30px;height:30px;background:#c82333;color:#fff;border:none;border-radius:5px}
+    .gold{color:gold}
+    .silver{color:#d0d0d0}
+    .bronze{color:#cd7f32}
+    input{background:#222;color:#eee;border:1px solid #333;border-radius:5px;padding:8px;width:100%;margin-bottom:6px}
+    #map{height:350px;border-radius:8px;margin:10px 0}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+
+<div id="login">
+  <h1>alle kan køre bil,<br>men det er ikke alle der har rettet</h1>
+  <input id="pw" type="password" placeholder="Kodeord">
+  <button id="loginBtn">Log ind</button>
+  <p id="loginErr">Forkert kodeord</p>
+</div>
+
+<div id="app">
+<header>
+  <h1 class="title">TIME TRIALS</h1>
+  <div class="subtitle"><em>hvis ikke du ryster, var det ikke hurtigt nok</em></div>
+</header>
+
+<div class="container" id="routeList">
+  <button class="btn-full" onclick="addRoute()">➕ Tilføj rute</button>
+</div>
+
+<div class="container hidden" id="routePage">
+  <button onclick="goBack()">⬅ Tilbage</button>
+  <input id="routeName">
+  <div id="routeLength" class="route-meta">📏 Længde: –</div>
+  <div id="map"></div>
+  <h3>Tider</h3>
+  <div id="times"></div>
+  <input id="nameInput" placeholder="Navn">
+  <input id="timeInput" placeholder="Tid (mm:ss)">
+  <input id="videoInput" placeholder="Video-link">
+  <button class="btn-full" onclick="addTime()">Gem tid</button>
+</div>
+</div>
+
+<script>
+// FIREBASE SETUP
+firebase.initializeApp({
+  apiKey: "AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
+  authDomain: "time-trials-b519e.firebaseapp.com",
+  projectId: "time-trials-b519e",
+  storageBucket: "time-trials-b519e.firebasestorage.app",
+  messagingSenderId: "491396428595",
+  appId: "1:491396428595:web:1e664cbbdb9b8a795fc446"
+});
+const db = firebase.firestore();
+
+// LOGIN
+const PASSWORD = "AK47-DRIFT-TUNE";
+loginBtn.onclick = () => {
+  if(pw.value === PASSWORD){ login.style.display='none'; app.style.display='block'; }
+  else loginErr.style.display='block';
+};
+
+// DATA
+let routes = [];
+let current = null;
+let map, router;
+
+// REALTIME LISTENER
+db.collection('routes').onSnapshot(snap => {
+  routes = [];
+  snap.forEach(doc => routes.push({ id: doc.id, ...doc.data() }));
+  renderRoutes();
+});
+
+function addRoute(){
+  db.collection('routes').add({ name:'Ny rute', points:[], times:[], distance:0 });
+}
+
+function deleteRoute(id){ db.collection('routes').doc(id).delete(); }
+
+function renderRoutes(){
+  routeList.innerHTML='<button class="btn-full" onclick="addRoute()">➕ Tilføj rute</button>';
+  routes.forEach(r => {
+    const d = document.createElement('div'); d.className='route';
+    d.innerHTML=`<b>${r.name}</b><div class="route-meta">📏 ${(r.distance/1000||0).toFixed(2)} km</div><button onclick="openRoute('${r.id}')">Åbn</button> <button class="btn-delete" onclick="deleteRoute('${r.id}')">🗑</button>`;
+    routeList.appendChild(d);
+  });
+}
+
+function openRoute(id){
+  current = routes.find(r=>r.id===id);
+  routeList.classList.add('hidden'); routePage.classList.remove('hidden');
+  routeName.value = current.name;
+  routeName.oninput = () => db.collection('routes').doc(id).update({ name: routeName.value });
+  renderTimes(); initMap();
+}
+
+function initMap(){
+  if(map) map.remove();
+  map = L.map('map').setView([55.6761,12.5683],13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  router = L.Routing.control({ waypoints: current.points.map(p=>L.latLng(p[0],p[1])), routeWhileDragging:true, draggableWaypoints:true, addWaypoints:false, show:false }).addTo(map);
+  router.on('routesfound', e => {
+    const pts = router.getWaypoints().map(w=>[w.latLng.lat,w.latLng.lng]);
+    const dist = e.routes[0].summary.totalDistance;
+    db.collection('routes').doc(current.id).update({ points: pts, distance: dist });
+    routeLength.textContent = '📏 Længde: ' + (dist/1000).toFixed(2) + ' km';
+  });
+}
+
+function addTime(){
+  if(!nameInput.value || !timeInput.value) return;
+  current.times.push({ name:nameInput.value, time:timeInput.value, video:videoInput.value||'' });
+  db.collection('routes').doc(current.id).update({ times: current.times });
+  nameInput.value=timeInput.value=videoInput.value='';
+}
+
+function renderTimes(){
+  times.innerHTML='';
+  (current.times||[]).forEach((t,i)=>{
+    const d=document.createElement('div');
+    d.innerHTML=`${t.name} – ${t.time} <button class="btn-delete" onclick="delTime(${i})">🗑</button>`;
+    times.appendChild(d);
+  });
+}
+
+function delTime(i){ current.times.splice(i,1); db.collection('routes').doc(current.id).update({ times: current.times }); }
+function goBack(){ routePage.classList.add('hidden'); routeList.classList.remove('hidden'); }
+</script>
+</body>
+</html>
