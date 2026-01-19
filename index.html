@@ -592,6 +592,8 @@ a:hover {
     const box = 15;
     let snake = [{ x: 9 * box, y: 9 * box }];
     let direction = "RIGHT";
+    let nextDirection = "RIGHT";
+    let running = false;
 
     let food = {
       x: Math.floor(Math.random() * 19) * box,
@@ -599,15 +601,42 @@ a:hover {
     };
 
     document.onkeydown = e => {
-      if (e.key === "ArrowUp" || e.key === "w") direction = "UP";
-      if (e.key === "ArrowDown" || e.key === "s") direction = "DOWN";
-      if (e.key === "ArrowLeft" || e.key === "a") direction = "LEFT";
-      if (e.key === "ArrowRight" || e.key === "d") direction = "RIGHT";
+      // START / RESTART MED SPACE
+      if (e.code === "Space") {
+        if (!running) {
+          running = true;
+        }
+        return;
+      }
+
+      // Retning (forhindrer 180° vendinger)
+      if ((e.key === "ArrowUp" || e.key === "w") && direction !== "DOWN") nextDirection = "UP";
+      if ((e.key === "ArrowDown" || e.key === "s") && direction !== "UP") nextDirection = "DOWN";
+      if ((e.key === "ArrowLeft" || e.key === "a") && direction !== "RIGHT") nextDirection = "LEFT";
+      if ((e.key === "ArrowRight" || e.key === "d") && direction !== "LEFT") nextDirection = "RIGHT";
     };
+
+    function resetGame() {
+      snake = [{ x: 9 * box, y: 9 * box }];
+      direction = "RIGHT";
+      nextDirection = "RIGHT";
+      running = false;
+    }
 
     function draw() {
       ctx.fillStyle = "black";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Vis "Tryk SPACE" tekst når spillet ikke kører
+      if (!running) {
+        ctx.fillStyle = "#ffb300";
+        ctx.font = "16px Orbitron";
+        ctx.textAlign = "center";
+        ctx.fillText("Tryk SPACE for at starte", canvas.width / 2, canvas.height / 2);
+        return;
+      }
+
+      direction = nextDirection;
 
       for (let part of snake) {
         ctx.fillStyle = "#ffb300";
@@ -624,6 +653,16 @@ a:hover {
       if (direction === "LEFT") head.x -= box;
       if (direction === "RIGHT") head.x += box;
 
+      // Kollision med væg – kun når man faktisk rammer
+      if (
+        head.x < 0 || head.y < 0 ||
+        head.x >= canvas.width || head.y >= canvas.height ||
+        snake.some(p => p.x === head.x && p.y === head.y)
+      ) {
+        resetGame();
+        return;
+      }
+
       if (head.x === food.x && head.y === food.y) {
         food = {
           x: Math.floor(Math.random() * 19) * box,
@@ -633,22 +672,12 @@ a:hover {
         snake.pop();
       }
 
-      if (
-        head.x < 0 || head.y < 0 ||
-        head.x >= canvas.width || head.y >= canvas.height ||
-        snake.some(p => p.x === head.x && p.y === head.y)
-      ) {
-        
-        snake = [{ x: 9 * box, y: 9 * box }];
-        direction = "RIGHT";
-        return;
-      }
-
       snake.unshift(head);
     }
 
     if (window.snakeInterval) clearInterval(window.snakeInterval);
     window.snakeInterval = setInterval(draw, 120);
+  }
   }
   // ---------- GAMES / SNAKE ----------
   function openGames() {
