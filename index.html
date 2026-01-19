@@ -11,9 +11,7 @@
       padding: 20px;
     }
 
-    h1 {
-      text-align: center;
-    }
+    h1 { text-align: center; }
 
     .add-route {
       max-width: 400px;
@@ -34,11 +32,13 @@
       background: #111;
       padding: 15px;
       border-radius: 8px;
-      min-width: 280px;
+      min-width: 300px;
     }
 
-    .route-column h2 {
-      text-align: center;
+    .route-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     input, button {
@@ -55,9 +55,14 @@
       cursor: pointer;
     }
 
-    button:hover {
-      background: #666;
+    button:hover { background: #666; }
+
+    .delete-btn {
+      background: #a00000;
+      margin-top: 5px;
     }
+
+    .delete-btn:hover { background: #d00000; }
 
     table {
       width: 100%;
@@ -72,9 +77,7 @@
       text-align: center;
     }
 
-    th {
-      background: #222;
-    }
+    th { background: #222; }
 
     a { color: #4da6ff; }
   </style>
@@ -93,10 +96,7 @@
 
 <script>
   let data = JSON.parse(localStorage.getItem("ruteData"));
-
-if (!data || !data.routes) {
-  data = { routes: {} };
-}
+  if (!data || !data.routes) data = { routes: {} };
 
   function save() {
     localStorage.setItem("ruteData", JSON.stringify(data));
@@ -115,6 +115,13 @@ if (!data || !data.routes) {
     document.getElementById("newRouteName").value = "";
   }
 
+  function deleteRoute(route) {
+    if (!confirm(`Slet ruten "${route}" og alle tider?`)) return;
+    delete data.routes[route];
+    save();
+    render();
+  }
+
   function addEntry(route) {
     const name = document.getElementById(`name-${route}`).value;
     const time = document.getElementById(`time-${route}`).value;
@@ -123,6 +130,13 @@ if (!data || !data.routes) {
     if (!name || !time) return;
 
     data.routes[route].push({ name, time, video });
+    save();
+    render();
+  }
+
+  function deleteEntry(route, index) {
+    if (!confirm("Slet denne tid?")) return;
+    data.routes[route].splice(index, 1);
     save();
     render();
   }
@@ -136,18 +150,22 @@ if (!data || !data.routes) {
       column.className = "route-column";
 
       let rows = "";
-      data.routes[route].forEach(e => {
+      data.routes[route].forEach((e, index) => {
         rows += `
           <tr>
             <td>${e.name}</td>
             <td>${e.time}</td>
             <td>${e.video ? `<a href="${e.video}" target="_blank">Video</a>` : "-"}</td>
+            <td><button class="delete-btn" onclick="deleteEntry('${route}', ${index})">✖</button></td>
           </tr>
         `;
       });
 
       column.innerHTML = `
-        <h2>${route}</h2>
+        <div class="route-header">
+          <h2>${route}</h2>
+          <button class="delete-btn" onclick="deleteRoute('${route}')">Slet rute</button>
+        </div>
 
         <input type="text" id="name-${route}" placeholder="Navn" />
         <input type="text" id="time-${route}" placeholder="Tid (mm:ss)" />
@@ -156,7 +174,7 @@ if (!data || !data.routes) {
 
         <table>
           <thead>
-            <tr><th>Navn</th><th>Tid</th><th>Video</th></tr>
+            <tr><th>Navn</th><th>Tid</th><th>Video</th><th></th></tr>
           </thead>
           <tbody>
             ${rows}
