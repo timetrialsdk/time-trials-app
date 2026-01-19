@@ -58,7 +58,7 @@ button{
 button:hover{transform:scale(1.08);box-shadow:0 0 12px rgba(255,180,0,.7);}
 
 .menu-box{
-  max-width:380px;
+  max-width:420px;
   margin:20px auto;
   background:#111;
   padding:20px;
@@ -95,10 +95,28 @@ button:hover{transform:scale(1.08);box-shadow:0 0 12px rgba(255,180,0,.7);}
   box-shadow:0 0 30px rgba(0,0,0,.7);
 }
 
-/* SNAKE BOX */
+table{width:100%;border-collapse:collapse;margin-top:15px;}
+th,td{border:1px solid #333;padding:6px;text-align:center;}
+th{background:#222;}
+a{color:#ffb300;}
+
+.trash{background:none;border:none;color:red;cursor:pointer;font-size:18px;}
+
+.lb-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+.lb-row{
+  display:grid;
+  grid-template-columns:40px 1fr auto;
+  align-items:center;
+  padding:10px;
+  margin-bottom:8px;
+  background:#111;
+  border:1px solid #333;
+  border-radius:6px;
+}
+
+/* SNAKE */
 .game-box{
-  width:320px;
-  height:320px;
+  width:320px;height:320px;
   margin:20px auto;
   border:2px solid #ffb300;
   display:flex;
@@ -106,9 +124,7 @@ button:hover{transform:scale(1.08);box-shadow:0 0 12px rgba(255,180,0,.7);}
   align-items:center;
   box-shadow:0 0 20px rgba(255,180,0,.6);
 }
-
 canvas{background:#000;}
-
 </style>
 </head>
 
@@ -139,10 +155,189 @@ canvas{background:#000;}
   <div id="routes" style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;"></div>
 </div>
 
+<div class="route-page" id="routePage"></div>
+<div class="route-page" id="leaderboardPage"></div>
 <div class="route-page" id="gamesPage"></div>
 
 <script>
-/* ---- SNAKE ---- */
+/* ================= FIREBASE ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
+  authDomain: "time-trials-b519e.firebaseapp.com",
+  projectId: "time-trials-b519e",
+  storageBucket: "time-trials-b519e.firebasestorage.app",
+  messagingSenderId: "491396428595",
+  appId: "1:491396428595:web:627bc61e5cd1b9475fc446"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let data = { routes:{} };
+
+db.collection("routes").onSnapshot(snapshot=>{
+  data.routes={};
+  snapshot.forEach(doc=>{
+    data.routes[doc.id]=doc.data().runs||[];
+  });
+  render();
+});
+
+/* ================= HJÆLP ================= */
+function timeToSeconds(t){
+  if(!t)return Infinity;
+  const p=t.split(":");
+  return parseInt(p[0])*60+parseFloat(p[1]);
+}
+
+function medal(i){
+  if(i===0)return "🥇";
+  if(i===1)return "🥈";
+  if(i===2)return "🥉";
+  return i+1;
+}
+
+/* ================= ROUTES ================= */
+async function addRoute(){
+  const name=newRouteName.value.trim();
+  if(!name)return;
+  await db.collection("routes").doc(name).set({runs:[]});
+  newRouteName.value="";
+}
+
+function render(){
+  const container=document.getElementById("routes");
+  container.innerHTML="";
+
+  for(const route of Object.keys(data.routes)){
+    const sorted=[...data.routes[route]].sort((a,b)=>timeToSeconds(a.time)-timeToSeconds(b.time));
+    const top3=sorted.slice(0,3);
+
+    let list="";
+    top3.forEach((e,i)=>{
+      list+=`<div>${medal(i)} ${e.name} – ${e.time}</div>`;
+    });
+
+    const card=document.createElement("div");
+    card.className="route-card";
+    card.innerHTML=`<h3>${route}</h3>${list||"Ingen tider endnu"}`;
+    card.onclick=()=>openRoute(route);
+    container.appendChild(card);
+  }
+}
+
+function openRoute(route){
+  home.style.display="none";
+  routePage.style.display="block";
+
+  const sorted=[...data.routes[route]].sort((a,b)=>timeToSeconds(a.time)-timeToSeconds(b.time));
+
+  let rows="";
+  sorted.forEach((e,i)=>{
+    rows+=`
+      <tr>
+        <td>${medal(i)}</td>
+        <td>${e.name}</td>
+        <td>${e.car||"-"}</td>
+        <td>${e.time}</td>
+        <td>${e.video?`<a href="${e.video}" target="_blank">Video</a>`:"-"}</td>
+        <td><button class="trash" onclick="deleteEntry('${route}',${i})">🗑️</button></td>
+      </tr>`;
+  });
+
+  routePage.innerHTML=`
+    <div class="route-container">
+      <button onclick="closeRoute()">← Tilbage</button>
+      <h2>${route}</h2>
+
+      <input id="name" placeholder="Navn">
+      <input id="car" placeholder="Bil">
+      <input id="time" placeholder="mm:ss">
+      <input id="video" placeholder="Video link">
+      <button onclick="addEntry('${route}')">+ Run</button>
+
+      <table>
+        <tr><th>Plads</th><th>Navn</th><th>Bil</th><th>Tid</th><th>Video</th><th></th></tr>
+        ${rows}
+      </table>
+    </div>`;
+}
+
+function closeRoute(){
+  routePage.style.display="none";
+  home.style.display="block";
+}
+
+async function addEntry(route){
+  const name=nameInput=name=document.getElementById("name").value;
+  const car=document.getElementById("car").value;
+  const time=document.getElementById("time").value;
+  const video=document.getElementById("video").value;
+  if(!name||!time)return;
+
+  const runs=data.routes[route];
+  runs.push({name,time,car,video});
+  await db.collection("routes").doc(route).set({runs});
+  openRoute(route);
+}
+
+async function deleteEntry(route,index){
+  const runs=data.routes[route];
+  runs.splice(index,1);
+  await db.collection("routes").doc(route).set({runs});
+  openRoute(route);
+}
+
+/* ================= LEADERBOARD ================= */
+function openLeaderboard(){
+  home.style.display="none";
+  leaderboardPage.style.display="block";
+
+  const stats={};
+
+  for(const route of Object.keys(data.routes)){
+    const sorted=[...data.routes[route]].sort((a,b)=>timeToSeconds(a.time)-timeToSeconds(b.time));
+    sorted.forEach((run,i)=>{
+      if(!stats[run.name])stats[run.name]={runs:0,gold:0,silver:0,bronze:0};
+      stats[run.name].runs++;
+      if(i===0)stats[run.name].gold++;
+      if(i===1)stats[run.name].silver++;
+      if(i===2)stats[run.name].bronze++;
+    });
+  }
+
+  const mostRuns=Object.entries(stats).sort((a,b)=>b[1].runs-a[1].runs);
+  const mostMedals=Object.entries(stats).sort((a,b)=>
+    (b[1].gold*3+b[1].silver*2+b[1].bronze)-
+    (a[1].gold*3+a[1].silver*2+a[1].bronze));
+
+  let col1="",col2="";
+
+  mostRuns.forEach(([n,s],i)=>{
+    col1+=`<div class="lb-row"><span>${i+1}</span><span>${n}</span><span>${s.runs}</span></div>`;
+  });
+
+  mostMedals.forEach(([n,s],i)=>{
+    col2+=`<div class="lb-row"><span>${i+1}</span><span>${n}</span><span>🥇${s.gold} 🥈${s.silver} 🥉${s.bronze}</span></div>`;
+  });
+
+  leaderboardPage.innerHTML=`
+    <div class="route-container">
+      <button onclick="closeLeaderboard()">← Tilbage</button>
+      <h2>LEADERBOARD</h2>
+      <div class="lb-grid">
+        <div><h3>🔥 Flest runs</h3>${col1||"Ingen data"}</div>
+        <div><h3>🏆 Flest medaljer</h3>${col2||"Ingen data"}</div>
+      </div>
+    </div>`;
+}
+
+function closeLeaderboard(){
+  leaderboardPage.style.display="none";
+  home.style.display="block";
+}
+
+/* ================= SNAKE ================= */
 let snakeInterval=null;
 let snakeKeyHandler=null;
 
@@ -166,8 +361,8 @@ function openGames(){
 }
 
 function closeGames(){
-  if(snakeInterval) clearInterval(snakeInterval);
-  if(snakeKeyHandler) document.removeEventListener("keydown",snakeKeyHandler);
+  if(snakeInterval)clearInterval(snakeInterval);
+  if(snakeKeyHandler)document.removeEventListener("keydown",snakeKeyHandler);
   gamesPage.style.display="none";
   home.style.display="block";
 }
@@ -186,7 +381,6 @@ function startSnake(){
 
   snakeKeyHandler=e=>{
     if(e.code==="Space"){running=true;return;}
-
     if(e.key==="ArrowUp"&&direction!=="DOWN")nextDirection="UP";
     if(e.key==="ArrowDown"&&direction!=="UP")nextDirection="DOWN";
     if(e.key==="ArrowLeft"&&direction!=="RIGHT")nextDirection="LEFT";
