@@ -80,14 +80,13 @@ a{color:#ffb300;}
 
 .trash{background:none;border:none;color:red;cursor:pointer;font-size:18px;}
 
-/* POPUPS */
 .popup{
   position:fixed;inset:0;display:none;background:rgba(0,0,0,.85);
   align-items:center;justify-content:center;z-index:3000;
 }
 .popup-box{
   background:#111;padding:20px;border-radius:12px;
-  max-width:500px;width:100%;
+  max-width:600px;width:100%;
   box-shadow:0 0 30px rgba(0,0,0,.8);
 }
 
@@ -108,7 +107,6 @@ a{color:#ffb300;}
     <input id="newRouteName" placeholder="Navn på rute">
     <button onclick="addRoute()">Tilføj rute</button><br><br>
 
-    <!-- KNAPPERNE UNDER TILFØJ RUTE -->
     <button onclick="openLeaderboard()">🏆 Leaderboard</button>
     <button onclick="openGames()">🎮 Games</button>
   </div>
@@ -152,7 +150,6 @@ const db = firebase.firestore();
 let data={routes:{}};
 let currentRoute=null;
 
-// LIVE OPDATERING
 db.collection("routes").onSnapshot(snapshot=>{
   data.routes={};
   snapshot.forEach(doc=>{
@@ -213,6 +210,7 @@ function openRoute(route){
         <td>${e.name}</td>
         <td>${e.car||"-"}</td>
         <td>${e.time}</td>
+        <td>${e.video?`<a href="${e.video}" target="_blank">Video</a>`:"-"}</td>
         <td><button class="trash" onclick="deleteEntry('${route}',${e.id})">🗑️</button></td>
       </tr>`;
   });
@@ -225,10 +223,11 @@ function openRoute(route){
       <input id="name" placeholder="Navn">
       <input id="car" placeholder="Bil">
       <input id="time" placeholder="mm:ss">
+      <input id="video" placeholder="Video link">
       <button onclick="addEntry('${route}')">+ Run</button>
 
       <table>
-        <tr><th>#</th><th>Navn</th><th>Bil</th><th>Tid</th><th></th></tr>
+        <tr><th>#</th><th>Navn</th><th>Bil</th><th>Tid</th><th>Video</th><th></th></tr>
         ${rows}
       </table>
     </div>`;
@@ -245,10 +244,11 @@ async function addEntry(route){
   const name=document.getElementById("name").value.trim();
   const car=document.getElementById("car").value.trim();
   const time=document.getElementById("time").value.trim();
+  const video=document.getElementById("video").value.trim();
   if(!name||!time)return;
 
   const runs=data.routes[route];
-  runs.push({id:Date.now(),name,car,time});
+  runs.push({id:Date.now(),name,car,time,video});
 
   openRoute(route);
   await db.collection("routes").doc(route).set({runs});
@@ -261,27 +261,34 @@ async function deleteEntry(route,id){
   await db.collection("routes").doc(route).set({runs});
 }
 
-// ================= LEADERBOARD =================
+// ================= LEADERBOARD (FIXET 🔥) =================
 function openLeaderboard(){
   const stats={};
 
   for(const route in data.routes){
     const sorted=[...data.routes[route]].sort((a,b)=>timeToSeconds(a.time)-timeToSeconds(b.time));
-    sorted.forEach((r,i)=>{
-      if(!stats[r.name]) stats[r.name]={runs:0,g:0,s:0,b:0};
-      stats[r.name].runs++;
-      if(i===0) stats[r.name].g++;
-      if(i===1) stats[r.name].s++;
-      if(i===2) stats[r.name].b++;
+    const top3=sorted.slice(0,3);
+
+    sorted.forEach(r=>{
+      const key=r.name.toLowerCase();
+      if(!stats[key]) stats[key]={name:r.name,runs:0,g:0,s:0,b:0};
+      stats[key].runs++;
+    });
+
+    top3.forEach((r,i)=>{
+      const key=r.name.toLowerCase();
+      if(i===0) stats[key].g++;
+      if(i===1) stats[key].s++;
+      if(i===2) stats[key].b++;
     });
   }
 
   let rows="<tr><th>Navn</th><th>Runs</th><th>Medaljer</th></tr>";
-  for(const name in stats){
-    const s=stats[name];
+  for(const key in stats){
+    const s=stats[key];
     rows+=`
       <tr>
-        <td>${name}</td>
+        <td>${s.name}</td>
         <td>${s.runs}</td>
         <td>🥇 ${s.g} 🥈 ${s.s} 🥉 ${s.b}</td>
       </tr>`;
