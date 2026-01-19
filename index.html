@@ -300,7 +300,8 @@ a:hover {
     <button onclick="addRoute()">Tilføj rute</button>
     <button onclick="openLeaderboard()" style="margin-top:8px;">🏆 Leaderboard</button>
     <button onclick="openGames()" style="margin-top:8px;">🎮 Games</button>
-    <button onclick="openGames()" style="margin-top:8px;">🎮 Games</button>
+    
+    
   </div>
 
   <div class="runs-title">RUNS</div>
@@ -637,7 +638,7 @@ a:hover {
         head.x >= canvas.width || head.y >= canvas.height ||
         snake.some(p => p.x === head.x && p.y === head.y)
       ) {
-        alert("Game Over!");
+        
         snake = [{ x: 9 * box, y: 9 * box }];
         direction = "RIGHT";
         return;
@@ -747,4 +748,3 @@ a:hover {
 
 </body>
 </html>
-
