@@ -205,6 +205,51 @@ a:hover {
     .trash:hover { color: #ff4444; }
 
     .medal { font-size: 20px; }
+
+    /* LEADERBOARD DESIGN */
+    .leaderboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-top: 20px;
+    }
+
+    .lb-col h3 {
+      text-align: center;
+      margin-bottom: 15px;
+      text-shadow: 0 0 6px rgba(255,180,0,0.6);
+    }
+
+    .lb-row {
+      display: grid;
+      grid-template-columns: 40px 1fr auto;
+      align-items: center;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 6px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .lb-row:hover {
+      transform: scale(1.02);
+      box-shadow: 0 0 10px rgba(255,180,0,0.4);
+    }
+
+    .lb-rank {
+      font-weight: bold;
+      color: #ffb300;
+      text-align: center;
+    }
+
+    .lb-name {
+      padding-left: 8px;
+    }
+
+    .lb-value {
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -404,10 +449,23 @@ a:hover {
 
     let col1 = "";
     mostRuns.forEach(([name, s], i) => {
-      col1 += `<div>${i+1}. ${name} – ${s.runs} runs</div>`;
+      col1 += `
+        <div class=\"lb-row\">
+          <span class=\"lb-rank\">${i+1}</span>
+          <span class=\"lb-name\">${name}</span>
+          <span class=\"lb-value\">${s.runs} runs</span>
+        </div>`;
     });
 
     let col2 = "";
+    mostRecords.forEach(([name, s], i) => {
+      col2 += `
+        <div class=\"lb-row\">
+          <span class=\"lb-rank\">${i+1}</span>
+          <span class=\"lb-name\">${name}</span>
+          <span class=\"lb-value\">🥇${s.gold} 🥈${s.silver} 🥉${s.bronze}</span>
+        </div>`;
+    });
     mostRecords.forEach(([name, s], i) => {
       col2 += `<div>${i+1}. ${name} – 🥇${s.gold} 🥈${s.silver} 🥉${s.bronze}</div>`;
     });
@@ -419,13 +477,13 @@ a:hover {
           <button class="back-btn" onclick="closeLeaderboard()">← Tilbage</button>
         </div>
 
-        <div style="display:flex; gap:40px;">
-          <div style="flex:1;">
+        <div class="leaderboard-grid">
+          <div class="lb-col">
             <h3>🔥 Flest runs</h3>
             ${col1 || "Ingen data endnu"}
           </div>
 
-          <div style="flex:1;">
+          <div class="lb-col">
             <h3>🏆 Flest rekorder</h3>
             ${col2 || "Ingen data endnu"}
           </div>
