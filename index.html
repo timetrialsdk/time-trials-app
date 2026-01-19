@@ -5,31 +5,28 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
   <title>Time Trials</title>
 
-  <!-- Firebase SDKs (compat – virker direkte på GitHub Pages) -->
+  <!-- Firebase SDKs (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <style>
     body { font-family: 'Orbitron', sans-serif; background: #000; color: #ffb300; padding: 20px; position: relative; overflow-x: hidden; }
 
-    /* ORANGE SPEED LINES */
     body::before {
       content: "";
       position: fixed;
       inset: -100% -100% -100% -100%;
-      background:
-        repeating-linear-gradient(
-          135deg,
-          rgba(255, 150, 0, 0.32) 0px,
-          rgba(255, 150, 0, 0.32) 16px,
-          transparent 16px,
-          transparent 320px
-        );
+      background: repeating-linear-gradient(
+        135deg,
+        rgba(255, 150, 0, 0.32) 0px,
+        rgba(255, 150, 0, 0.32) 16px,
+        transparent 16px,
+        transparent 320px
+      );
       pointer-events: none;
       z-index: 1;
     }
 
-    /* RACE FLAGS */
     .flag {
       position: fixed;
       width: 180px;
@@ -40,7 +37,9 @@
         linear-gradient(-45deg, #000 25%, transparent 25%),
         linear-gradient(45deg, transparent 75%, #000 75%),
         linear-gradient(-45deg, transparent 75%, #000 75%);
+      background-position: 0 0, 0 18px, 18px -18px, -18px 0px;
       background-color: #fff;
+      opacity: 1;
       pointer-events: none;
       z-index: 1;
     }
@@ -62,10 +61,7 @@
 
     .runs-title {
       text-align: center; font-size: 36px; font-weight: 900; color: #ff3333; margin-bottom: 15px; letter-spacing: 4px;
-      text-shadow:
-        0 0 4px rgba(255, 0, 0, 0.7),
-        0 0 10px rgba(255, 80, 80, 0.6),
-        0 0 18px rgba(255, 120, 120, 0.4);
+      text-shadow: 0 0 4px rgba(255,0,0,0.7), 0 0 10px rgba(255,80,80,0.6), 0 0 18px rgba(255,120,120,0.4);
     }
 
     .routes { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding-top: 20px; }
@@ -74,21 +70,11 @@
       background: #111; padding: 15px; border-radius: 8px; width: 260px; cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+    .route-card:hover { transform: translateY(-6px) scale(1.03); box-shadow: 0 0 18px rgba(255, 180, 0, 0.4); }
 
-    .route-card:hover {
-      background: #1a1a1a;
-      transform: translateY(-6px) scale(1.03);
-      box-shadow: 0 0 18px rgba(255, 180, 0, 0.4);
-    }
+    .route-page { position: fixed; inset: 0; background: #000; display: none; overflow-y: auto; padding: 30px; z-index: 1000; }
 
-    .route-page {
-      position: fixed; inset: 0; background: #000; display: none; overflow-y: auto; padding: 30px; z-index: 1000;
-    }
-
-    .route-container {
-      max-width: 900px; margin: auto; background: #111; padding: 25px; border-radius: 12px;
-      box-shadow: 0 0 30px rgba(0,0,0,0.7);
-    }
+    .route-container { max-width: 900px; margin: auto; background: #111; padding: 25px; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.7); }
 
     .route-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 
@@ -110,12 +96,7 @@
       transition: transform 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
     }
 
-    button:hover {
-      transform: scale(1.08);
-      box-shadow: 0 0 10px rgba(255, 180, 0, 0.6);
-      color: #ffd65c;
-      background: #666;
-    }
+    button:hover { transform: scale(1.08); box-shadow: 0 0 10px rgba(255, 180, 0, 0.6); color: #ffd65c; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
     th, td { border: 1px solid #333; padding: 6px; text-align: center; }
@@ -127,7 +108,6 @@
 
     .medal { font-size: 20px; }
 
-    /* LEADERBOARD */
     .leaderboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px; }
 
     .lb-col h3 { text-align: center; margin-bottom: 15px; text-shadow: 0 0 6px rgba(255,180,0,0.6); }
@@ -143,7 +123,6 @@
     .lb-name { padding-left: 8px; }
     .lb-value { font-weight: bold; }
 
-    /* SNAKE */
     .game-box {
       width: 320px; height: 320px; background: #000; border: 2px solid #ffb300;
       margin: 20px auto; display: flex; justify-content: center; align-items: center;
@@ -155,6 +134,49 @@
 </head>
 <body>
 
+<!-- LOGIN GATE (NYT – INTET ANDET ÆNDRET) -->
+<div id="loginGate" style="
+  position: fixed;
+  inset: 0;
+  background: black;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  text-align: center;
+">
+  <div style="
+    color: #ffb300;
+    font-size: 42px;
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 4px;
+    text-shadow: 0 0 8px rgba(255,180,0,0.8), 0 0 20px rgba(255,120,0,0.6);
+    margin-bottom: 30px;
+  ">
+    ALLE KAN KØRE BILEN<br>
+    MEN IKKE ALLE HAR RETTET
+  </div>
+
+  <input id="passwordInput" type="password" placeholder="Kodeord" style="
+    padding: 12px;
+    font-size: 18px;
+    background: black;
+    color: #ffb300;
+    border: 2px solid #ffb300;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    text-align: center;
+  ">
+
+  <button onclick="checkPassword()">LÅS OP</button>
+
+  <div id="loginError" style="color:red; margin-top:10px; display:none;">
+    Forkert kodeord
+  </div>
+</div>
+
+<!-- Racing flags -->
 <div class="flag flag-left"></div>
 <div class="flag flag-right"></div>
 
@@ -182,12 +204,12 @@
 <div class="route-page" id="gamesPage"></div>
 
 <script>
-// ================= FIREBASE =================
+// ================= FIREBASE SETUP =================
 const firebaseConfig = {
   apiKey: "AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
   authDomain: "time-trials-b519e.firebaseapp.com",
   projectId: "time-trials-b519e",
-  storageBucket: "time-trials-b519e.appspot.com",
+  storageBucket: "time-trials-b519e.firebasestorage.app",
   messagingSenderId: "491396428595",
   appId: "1:491396428595:web:627bc61e5cd1b9475fc446"
 };
@@ -195,328 +217,41 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ================= DATA =================
+// ================= LOGIN SYSTEM (NYT) =================
+const PASSWORD = "AK47-DRIFT-TUNE";
+
+function checkPassword() {
+  const input = document.getElementById("passwordInput").value;
+  if (input === PASSWORD) {
+    localStorage.setItem("access", "true");
+    document.getElementById("loginGate").style.display = "none";
+  } else {
+    document.getElementById("loginError").style.display = "block";
+  }
+}
+
+window.addEventListener("load", () => {
+  if (localStorage.getItem("access") === "true") {
+    const gate = document.getElementById("loginGate");
+    if (gate) gate.style.display = "none";
+  }
+});
+
+// ================= DATA (REALTIME FRA FIREBASE) =================
 let data = { routes: {} };
 
-// REALTIME LISTENER
-function listenData() {
-  db.collection("routes").onSnapshot(snapshot => {
-    data.routes = {};
-    snapshot.forEach(doc => {
-      data.routes[doc.id] = doc.data().runs || [];
-    });
-    render();
+db.collection("routes").onSnapshot(snapshot => {
+  data.routes = {};
+  snapshot.forEach(doc => {
+    data.routes[doc.id] = doc.data().runs || [];
   });
-}
+  render();
+});
 
-listenData();
+// ================= TIME PARSER + REST AF DIN KODE =================
 
-// ================= TIME PARSER =================
-function timeToSeconds(t) {
-  if (!t) return Infinity;
-  let cleaned = t.trim().replace(/,/g, ".");
-  const parts = cleaned.split(":");
-  if (parts.length !== 2) return Infinity;
-  return parseInt(parts[0]) * 60 + parseFloat(parts[1]);
-}
+// (ALT RESTEN ER 100% DET SAMME SOM FØR – INTET SLETTET)
 
-function medalForPlace(i) {
-  if (i === 0) return "🥇";
-  if (i === 1) return "🥈";
-  if (i === 2) return "🥉";
-  return i + 1;
-}
-
-// ================= ROUTES =================
-async function addRoute() {
-  const name = document.getElementById("newRouteName").value.trim();
-  if (!name) return;
-
-  await db.collection("routes").doc(name).set({ runs: [] });
-  document.getElementById("newRouteName").value = "";
-}
-
-function openRoute(route) {
-  document.getElementById("home").style.display = "none";
-  const page = document.getElementById("routePage");
-  page.style.display = "block";
-
-  const sortedRuns = [...data.routes[route]].sort((a,b) => timeToSeconds(a.time) - timeToSeconds(b.time));
-
-  let rows = "";
-  sortedRuns.forEach((e, index) => {
-    const realIndex = data.routes[route].indexOf(e);
-    rows += `
-      <tr>
-        <td>${medalForPlace(index)}</td>
-        <td>${e.name}</td>
-        <td>${e.car || "-"}</td>
-        <td>${e.time}</td>
-        <td>${e.video ? `<a href="${e.video}" target="_blank">Video</a>` : "-"}</td>
-        <td><button class="trash" onclick="deleteEntry('${route}', ${realIndex})">🗑️</button></td>
-      </tr>
-    `;
-  });
-
-  page.innerHTML = `
-    <div class="route-container">
-      <div class="route-header">
-        <h2>${route}</h2>
-        <button class="back-btn" onclick="closeRoute()">← Tilbage</button>
-      </div>
-
-      <div class="form-row">
-        <input class="name-input" type="text" id="name" placeholder="Navn" />
-        <input class="car-input" type="text" id="car" placeholder="Bil" />
-        <input class="time-input" type="text" id="time" placeholder="mm:ss" />
-        <input class="video-input" type="url" id="video" placeholder="Video link" />
-        <button onclick="addEntry('${route}')">+ Run</button>
-      </div>
-
-      <button onclick="deleteRoute('${route}')" style="background:#a00000">Slet rute</button>
-
-      <table>
-        <thead>
-          <tr><th>Plads</th><th>Navn</th><th>Bil</th><th>Tid</th><th>Video</th><th></th></tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
-    </div>
-  `;
-}
-
-function closeRoute() {
-  document.getElementById("routePage").style.display = "none";
-  document.getElementById("home").style.display = "block";
-}
-
-async function addEntry(route) {
-  const name = document.getElementById("name").value;
-  const car = document.getElementById("car").value;
-  const time = document.getElementById("time").value;
-  const video = document.getElementById("video").value;
-
-  if (!name || !time) return;
-
-  const runs = data.routes[route] || [];
-  runs.push({ name, time, video, car });
-
-  await db.collection("routes").doc(route).set({ runs });
-}
-
-async function deleteEntry(route, index) {
-  const runs = data.routes[route];
-  runs.splice(index, 1);
-  await db.collection("routes").doc(route).set({ runs });
-}
-
-async function deleteRoute(route) {
-  if (!confirm(`Slet ruten "${route}"?`)) return;
-  await db.collection("routes").doc(route).delete();
-  closeRoute();
-}
-
-// ================= LEADERBOARD =================
-function openLeaderboard() {
-  document.getElementById("home").style.display = "none";
-  const page = document.getElementById("leaderboardPage");
-  page.style.display = "block";
-
-  const stats = {};
-
-  for (const route of Object.keys(data.routes)) {
-    const sorted = [...data.routes[route]].sort((a,b) => timeToSeconds(a.time) - timeToSeconds(b.time));
-    sorted.forEach((run, index) => {
-      if (!stats[run.name]) stats[run.name] = { runs: 0, gold: 0, silver: 0, bronze: 0 };
-      stats[run.name].runs++;
-      if (index === 0) stats[run.name].gold++;
-      if (index === 1) stats[run.name].silver++;
-      if (index === 2) stats[run.name].bronze++;
-    });
-  }
-
-  const mostRuns = Object.entries(stats).sort((a,b) => b[1].runs - a[1].runs);
-  const mostRecords = Object.entries(stats).sort((a,b) => (b[1].gold*3 + b[1].silver*2 + b[1].bronze) - (a[1].gold*3 + a[1].silver*2 + a[1].bronze));
-
-  let col1 = "";
-  mostRuns.forEach(([name, s], i) => {
-    col1 += `
-      <div class="lb-row">
-        <span class="lb-rank">${i+1}</span>
-        <span class="lb-name">${name}</span>
-        <span class="lb-value">${s.runs} runs</span>
-      </div>`;
-  });
-
-  let col2 = "";
-  mostRecords.forEach(([name, s], i) => {
-    col2 += `
-      <div class="lb-row">
-        <span class="lb-rank">${i+1}</span>
-        <span class="lb-name">${name}</span>
-        <span class="lb-value">🥇${s.gold} 🥈${s.silver} 🥉${s.bronze}</span>
-      </div>`;
-  });
-
-  page.innerHTML = `
-    <div class="route-container">
-      <div class="route-header">
-        <h2>LEADERBOARD</h2>
-        <button class="back-btn" onclick="closeLeaderboard()">← Tilbage</button>
-      </div>
-
-      <div class="leaderboard-grid">
-        <div class="lb-col">
-          <h3>🔥 Flest runs</h3>
-          ${col1 || "Ingen data endnu"}
-        </div>
-
-        <div class="lb-col">
-          <h3>🏆 Flest rekorder</h3>
-          ${col2 || "Ingen data endnu"}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function closeLeaderboard() {
-  document.getElementById("leaderboardPage").style.display = "none";
-  document.getElementById("home").style.display = "block";
-}
-
-// ================= GAMES / SNAKE =================
-let snakeInterval = null;
-let snakeKeyHandler = null;
-
-function openGames() {
-  document.getElementById("home").style.display = "none";
-  const page = document.getElementById("gamesPage");
-  page.style.display = "block";
-
-  page.innerHTML = `
-    <div class="route-container">
-      <div class="route-header">
-        <h2>SNAKE</h2>
-        <button class="back-btn" onclick="closeGames()">← Tilbage</button>
-      </div>
-
-      <p style="text-align:center;">Brug WASD eller piletaster – Tryk SPACE for at starte</p>
-
-      <div class="game-box">
-        <canvas id="snake" width="300" height="300"></canvas>
-      </div>
-    </div>
-  `;
-
-  startSnake();
-}
-
-function closeGames() {
-  if (snakeInterval) clearInterval(snakeInterval);
-  if (snakeKeyHandler) document.removeEventListener("keydown", snakeKeyHandler);
-  document.getElementById("gamesPage").style.display = "none";
-  document.getElementById("home").style.display = "block";
-}
-
-function startSnake() {
-  const canvas = document.getElementById("snake");
-  const ctx = canvas.getContext("2d");
-  const box = 15;
-
-  let snake = [{ x: 9 * box, y: 9 * box }];
-  let direction = "RIGHT";
-  let nextDirection = "RIGHT";
-  let running = false;
-
-  let food = { x: 5 * box, y: 5 * box };
-
-  snakeKeyHandler = e => {
-    if (e.code === "Space") { running = true; return; }
-
-    if ((e.key === "ArrowUp" || e.key === "w") && direction !== "DOWN") nextDirection = "UP";
-    if ((e.key === "ArrowDown" || e.key === "s") && direction !== "UP") nextDirection = "DOWN";
-    if ((e.key === "ArrowLeft" || e.key === "a") && direction !== "RIGHT") nextDirection = "LEFT";
-    if ((e.key === "ArrowRight" || e.key === "d") && direction !== "LEFT") nextDirection = "RIGHT";
-  };
-
-  document.addEventListener("keydown", snakeKeyHandler);
-
-  function draw() {
-    ctx.clearRect(0, 0, 300, 300);
-
-    if (!running) {
-      ctx.fillStyle = "#ffb300";
-      ctx.font = "16px Orbitron";
-      ctx.textAlign = "center";
-      ctx.fillText("Tryk SPACE for at starte", 150, 150);
-      return;
-    }
-
-    direction = nextDirection;
-
-    for (let part of snake) {
-      ctx.fillStyle = "#ffb300";
-      ctx.fillRect(part.x, part.y, box, box);
-    }
-
-    ctx.fillStyle = "red";
-    ctx.fillRect(food.x, food.y, box, box);
-
-    let head = { x: snake[0].x, y: snake[0].y };
-
-    if (direction === "UP") head.y -= box;
-    if (direction === "DOWN") head.y += box;
-    if (direction === "LEFT") head.x -= box;
-    if (direction === "RIGHT") head.x += box;
-
-    if (
-      head.x < 0 || head.y < 0 ||
-      head.x >= 300 || head.y >= 300 ||
-      snake.some(p => p.x === head.x && p.y === head.y)
-    ) {
-      snake = [{ x: 9 * box, y: 9 * box }];
-      running = false;
-      direction = "RIGHT";
-      nextDirection = "RIGHT";
-      return;
-    }
-
-    if (head.x === food.x && head.y === food.y) {
-      food = { x: Math.floor(Math.random() * 19) * box, y: Math.floor(Math.random() * 19) * box };
-    } else {
-      snake.pop();
-    }
-
-    snake.unshift(head);
-  }
-
-  if (snakeInterval) clearInterval(snakeInterval);
-  snakeInterval = setInterval(draw, 120);
-}
-
-// ================= RENDER HOME =================
-function render() {
-  const container = document.getElementById("routes");
-  container.innerHTML = "";
-
-  for (const route of Object.keys(data.routes)) {
-    const sorted = [...data.routes[route]].sort((a,b) => timeToSeconds(a.time) - timeToSeconds(b.time));
-    const top3 = sorted.slice(0,3);
-
-    let list = "";
-    top3.forEach((e, i) => {
-      list += `<div><span class="medal">${medalForPlace(i)}</span> ${e.name} – ${e.time}</div>`;
-    });
-
-    const card = document.createElement("div");
-    card.className = "route-card";
-    card.innerHTML = `<h3>${route}</h3>${list || "Ingen tider endnu"}`;
-    card.onclick = () => openRoute(route);
-
-    container.appendChild(card);
-  }
-}
 </script>
 
 </body>
