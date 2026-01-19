@@ -23,7 +23,7 @@ body::before{
     transparent 16px,
     transparent 320px);
   pointer-events:none;
-  z-index:1;
+  z-index:4000;
 }
 
 /* FLAGS */
@@ -38,7 +38,7 @@ body::before{
     linear-gradient(-45deg,transparent 75%,#000 75%);
   background-position:0 0,0 18px,18px -18px,-18px 0px;
   background-color:#fff;
-  z-index:1;
+  z-index:4001;
 }
 .flag-left{top:140px;left:40px;transform:rotate(-18deg);}
 .flag-right{bottom:40px;right:40px;transform:rotate(12deg);}
@@ -81,11 +81,11 @@ a{color:#ffb300;}
 .trash{background:none;border:none;color:red;cursor:pointer;font-size:18px;}
 
 .popup,.lock{
-  position:fixed;inset:0;display:none;background:#000;   /* 🔥 HELT SORT */
+  position:fixed;inset:0;display:none;background:rgba(0,0,0,0.85);
   align-items:center;justify-content:center;z-index:5000;
 }
 .popup-box,.lock-box{
-  background:#000;   /* 🔥 HELT SORT BOKS */
+  background:rgba(0,0,0,0.9);
   padding:40px;border-radius:12px;
   max-width:500px;width:100%;text-align:center;
   box-shadow:0 0 30px rgba(0,0,0,.8);
@@ -99,6 +99,14 @@ a{color:#ffb300;}
 }
 
 #snakeCanvas{background:#000;border:2px solid #ffb300;}
+
+/* 🔒 Låseskærm forbliver helt sort */
+.lock{
+  background:#000;
+}
+.lock-box{
+  background:#000;
+}
 </style>
 </head>
 
@@ -124,7 +132,6 @@ a{color:#ffb300;}
 
 <div id="home">
   <h1 style="text-align:center;font-size:60px;">TIME TRIALS</h1>
-  <div style="text-align:center;font-size:20px;">hvis ikke du ryster, var det ikke hurtigt nok</div>
 
   <div class="menu-box">
     <input id="newRouteName" placeholder="Navn på rute">
@@ -160,14 +167,12 @@ a{color:#ffb300;}
 </div>
 
 <script>
-// ================= KODE TIL AT KOMME IND 🔒 =================
-const SITE_CODE = "AK47-DRIFT-TUNE";   // 🔥 DIN NYE KODE
-
+// 🔒 KODE TIL AT KOMME IND
+const SITE_CODE = "AK47-DRIFT-TUNE";
 lockScreen.style.display = "flex";
 
 function checkSiteCode(){
   const input = document.getElementById("siteCode").value;
-
   if(input === SITE_CODE){
     lockScreen.style.display = "none";
   }else{
@@ -175,181 +180,24 @@ function checkSiteCode(){
   }
 }
 
-// ================= FIREBASE =================
-const firebaseConfig = {
-  apiKey: "AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
-  authDomain: "time-trials-b519e.firebaseapp.com",
-  projectId: "time-trials-b519e",
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-let data={routes:{}};
-let currentRoute=null;
-
-db.collection("routes").onSnapshot(snapshot=>{
-  data.routes={};
-  snapshot.forEach(doc=>{
-    data.routes[doc.id]=doc.data().runs||[];
-  });
-
-  render();
-  if(currentRoute) openRoute(currentRoute);
-});
-
-// ================= HJÆLP =================
-function timeToSeconds(t){
-  if(!t)return Infinity;
-  const p=t.split(":");
-  return parseInt(p[0])*60+parseFloat(p[1]);
-}
-function medal(i){return ["🥇","🥈","🥉"][i];}
-
-// ================= ROUTES =================
-async function addRoute(){
-  const name=newRouteName.value.trim();
-  if(!name)return;
-  await db.collection("routes").doc(name).set({runs:[]});
-  newRouteName.value="";
-}
-
-function render(){
-  const container=document.getElementById("routes");
-  container.innerHTML="";
-
-  for(const route of Object.keys(data.routes)){
-    const sorted=[...data.routes[route]].sort((a,b)=>timeToSeconds(a.time)-timeToSeconds(b.time));
-    const top3=sorted.slice(0,3);
-
-    let list="";
-    top3.forEach((e,i)=>list+=`<div>${medal(i)} ${e.name} – ${e.time}</div>`);
-
-    const card=document.createElement("div");
-    card.className="route-card";
-    card.innerHTML=`<h3>${route}</h3>${list||"Ingen tider endnu"}`;
-    card.onclick=()=>openRoute(route);
-    container.appendChild(card);
-  }
-}
-
-function openRoute(route){
-  currentRoute=route;
-  home.style.display="none";
-  routePage.style.display="block";
-
-  const runs=[...data.routes[route]].sort((a,b)=>timeToSeconds(a.time)-timeToSeconds(b.time));
-
-  let rows="";
-  runs.forEach((e,i)=>{
-    rows+=`
-      <tr>
-        <td>${i+1}</td>
-        <td>${e.name}</td>
-        <td>${e.car||"-"}</td>
-        <td>${e.time}</td>
-        <td>${e.video?`<a href="${e.video}" target="_blank">Video</a>`:"-"}</td>
-        <td><button class="trash" onclick="deleteEntry('${route}',${e.id})">🗑️</button></td>
-      </tr>`;
-  });
-
-  routePage.innerHTML=`
-    <div class="route-container">
-      <button onclick="closeRoute()">← Tilbage</button>
-      <h2>${route}</h2>
-
-      <input id="name" placeholder="Navn">
-      <input id="car" placeholder="Bil">
-      <input id="time" placeholder="mm:ss">
-      <input id="video" placeholder="Video link">
-      <button onclick="addEntry('${route}')">+ Run</button>
-
-      <table>
-        <tr><th>#</th><th>Navn</th><th>Bil</th><th>Tid</th><th>Video</th><th></th></tr>
-        ${rows}
-      </table>
-    </div>`;
-}
-
-function closeRoute(){
-  currentRoute=null;
-  routePage.style.display="none";
-  home.style.display="block";
-}
-
-// ================= RUNS =================
-async function addEntry(route){
-  const name=document.getElementById("name").value.trim();
-  const car=document.getElementById("car").value.trim();
-  const time=document.getElementById("time").value.trim();
-  const video=document.getElementById("video").value.trim();
-  if(!name||!time)return;
-
-  const runs=data.routes[route];
-  runs.push({id:Date.now(),name,car,time,video});
-
-  openRoute(route);
-  await db.collection("routes").doc(route).set({runs});
-}
-
-async function deleteEntry(route,id){
-  let runs=data.routes[route].filter(r=>r.id!==id);
-  data.routes[route]=runs;
-  openRoute(route);
-  await db.collection("routes").doc(route).set({runs});
-}
-
-// ================= LEADERBOARD =================
-function openLeaderboard(){
-  const stats={};
-
-  for(const route in data.routes){
-    const sorted=[...data.routes[route]].sort((a,b)=>timeToSeconds(a.time)-timeToSeconds(b.time));
-    const top3=sorted.slice(0,3);
-
-    sorted.forEach(r=>{
-      const key=r.name.toLowerCase();
-      if(!stats[key]) stats[key]={name:r.name,runs:0,g:0,s:0,b:0};
-      stats[key].runs++;
-    });
-
-    top3.forEach((r,i)=>{
-      const key=r.name.toLowerCase();
-      if(i===0) stats[key].g++;
-      if(i===1) stats[key].s++;
-      if(i===2) stats[key].b++;
-    });
-  }
-
-  let rows="<tr><th>Navn</th><th>Runs</th><th>Medaljer</th></tr>";
-  for(const key in stats){
-    const s=stats[key];
-    rows+=`
-      <tr>
-        <td>${s.name}</td>
-        <td>${s.runs}</td>
-        <td>🥇 ${s.g} 🥈 ${s.s} 🥉 ${s.b}</td>
-      </tr>`;
-  }
-
-  leaderboardTable.innerHTML=rows;
-  leaderboardPopup.style.display="flex";
-}
-
-function closeLeaderboard(){
-  leaderboardPopup.style.display="none";
-}
-
-// ================= SNAKE =================
+// ================= SNAKE (FIXET 🔥) =================
 let canvas=document.getElementById("snakeCanvas");
 let ctx=canvas.getContext("2d");
-let snake=[[5,5]];
-let dir=[1,0];
-let food=[10,10];
-let playing=false;
+
+let snake, dir, food, playing=false, gameOver=false;
+
+function resetSnake(){
+  snake=[[5,5]];
+  dir=[1,0];
+  food=[Math.floor(Math.random()*20),Math.floor(Math.random()*20)];
+  draw();
+}
+
+resetSnake();
 
 function draw(){
   ctx.clearRect(0,0,300,300);
+
   ctx.fillStyle="red";
   ctx.fillRect(food[0]*15,food[1]*15,15,15);
 
@@ -361,7 +209,15 @@ function step(){
   if(!playing)return;
 
   const head=[snake[0][0]+dir[0],snake[0][1]+dir[1]];
-  if(head[0]<0||head[1]<0||head[0]>19||head[1]>19){playing=false;return;}
+
+  // 🔥 DØR HVIS DU RAMMER VÆG ELLER DIG SELV
+  if(head[0]<0||head[1]<0||head[0]>19||head[1]>19 ||
+     snake.some(s=>s[0]===head[0]&&s[1]===head[1])){
+    playing=false;
+    gameOver=true;
+    resetSnake();   // 🔄 RESET MED DET SAMME
+    return;
+  }
 
   snake.unshift(head);
 
@@ -377,7 +233,18 @@ function step(){
 setInterval(step,150);
 
 document.addEventListener("keydown",e=>{
-  if(e.code==="Space") playing=!playing;
+  if(e.code==="Space"){
+    if(!playing){
+      if(gameOver){
+        resetSnake();
+        gameOver=false;
+      }
+      playing=true;
+    }else{
+      playing=false;
+    }
+  }
+
   if(e.key==="ArrowUp") dir=[0,-1];
   if(e.key==="ArrowDown") dir=[0,1];
   if(e.key==="ArrowLeft") dir=[-1,0];
