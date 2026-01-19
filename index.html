@@ -732,7 +732,7 @@ a:hover {
         head.x >= canvas.width || head.y >= canvas.height ||
         snake.some(p => p.x === head.x && p.y === head.y)
       ) {
-        alert("Game Over!");
+        
         snake = [{ x: 9 * box, y: 9 * box }];
         direction = "RIGHT";
         return;
