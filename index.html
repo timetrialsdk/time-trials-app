@@ -160,7 +160,7 @@ canvas{background:#000;}
 <div class="route-page" id="gamesPage"></div>
 
 <script>
-/* ================= FIREBASE ================= */
+// ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
   authDomain: "time-trials-b519e.firebaseapp.com",
@@ -183,7 +183,7 @@ db.collection("routes").onSnapshot(snapshot=>{
   render();
 });
 
-/* ================= HJÆLP ================= */
+// ================= HJÆLP =================
 function timeToSeconds(t){
   if(!t)return Infinity;
   const p=t.split(":");
@@ -197,12 +197,12 @@ function medal(i){
   return i+1;
 }
 
-/* ================= ROUTES ================= */
+// ================= ROUTES =================
 async function addRoute(){
-  const name=newRouteName.value.trim();
+  const name=document.getElementById("newRouteName").value.trim();
   if(!name)return;
   await db.collection("routes").doc(name).set({runs:[]});
-  newRouteName.value="";
+  document.getElementById("newRouteName").value="";
 }
 
 function render(){
@@ -227,8 +227,9 @@ function render(){
 }
 
 function openRoute(route){
-  home.style.display="none";
-  routePage.style.display="block";
+  document.getElementById("home").style.display="none";
+  const page=document.getElementById("routePage");
+  page.style.display="block";
 
   const sorted=[...data.routes[route]].sort((a,b)=>timeToSeconds(a.time)-timeToSeconds(b.time));
 
@@ -245,7 +246,7 @@ function openRoute(route){
       </tr>`;
   });
 
-  routePage.innerHTML=`
+  page.innerHTML=`
     <div class="route-container">
       <button onclick="closeRoute()">← Tilbage</button>
       <h2>${route}</h2>
@@ -264,12 +265,12 @@ function openRoute(route){
 }
 
 function closeRoute(){
-  routePage.style.display="none";
-  home.style.display="block";
+  document.getElementById("routePage").style.display="none";
+  document.getElementById("home").style.display="block";
 }
 
 async function addEntry(route){
-  const name=nameInput=name=document.getElementById("name").value;
+  const name=document.getElementById("name").value;
   const car=document.getElementById("car").value;
   const time=document.getElementById("time").value;
   const video=document.getElementById("video").value;
@@ -288,10 +289,11 @@ async function deleteEntry(route,index){
   openRoute(route);
 }
 
-/* ================= LEADERBOARD ================= */
+// ================= LEADERBOARD =================
 function openLeaderboard(){
-  home.style.display="none";
-  leaderboardPage.style.display="block";
+  document.getElementById("home").style.display="none";
+  const page=document.getElementById("leaderboardPage");
+  page.style.display="block";
 
   const stats={};
 
@@ -321,7 +323,7 @@ function openLeaderboard(){
     col2+=`<div class="lb-row"><span>${i+1}</span><span>${n}</span><span>🥇${s.gold} 🥈${s.silver} 🥉${s.bronze}</span></div>`;
   });
 
-  leaderboardPage.innerHTML=`
+  page.innerHTML=`
     <div class="route-container">
       <button onclick="closeLeaderboard()">← Tilbage</button>
       <h2>LEADERBOARD</h2>
@@ -333,19 +335,20 @@ function openLeaderboard(){
 }
 
 function closeLeaderboard(){
-  leaderboardPage.style.display="none";
-  home.style.display="block";
+  document.getElementById("leaderboardPage").style.display="none";
+  document.getElementById("home").style.display="block";
 }
 
-/* ================= SNAKE ================= */
+// ================= SNAKE =================
 let snakeInterval=null;
 let snakeKeyHandler=null;
 
 function openGames(){
-  home.style.display="none";
-  gamesPage.style.display="block";
+  document.getElementById("home").style.display="none";
+  const page=document.getElementById("gamesPage");
+  page.style.display="block";
 
-  gamesPage.innerHTML=`
+  page.innerHTML=`
     <div class="route-container">
       <button onclick="closeGames()">← Tilbage</button>
       <h2 style="text-align:center;">SNAKE</h2>
@@ -363,8 +366,8 @@ function openGames(){
 function closeGames(){
   if(snakeInterval)clearInterval(snakeInterval);
   if(snakeKeyHandler)document.removeEventListener("keydown",snakeKeyHandler);
-  gamesPage.style.display="none";
-  home.style.display="block";
+  document.getElementById("gamesPage").style.display="none";
+  document.getElementById("home").style.display="block";
 }
 
 function startSnake(){
