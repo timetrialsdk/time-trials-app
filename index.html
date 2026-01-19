@@ -8,14 +8,19 @@
   <style>
     body { font-family: 'Orbitron', sans-serif; background: #000; color: #ffb300; padding: 20px; position: relative; overflow-x: hidden; }
 
-    /* DRIFT TRACK BAGGRUND */
-    .track-bg {
+    /* ORANGE SPEED LINES I BAGGRUNDEN */
+    body::before {
+      content: "";
       position: fixed;
-      inset: -10% -10% -10% -10%;
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 1000'><path d='M40 300 C 300 40, 500 420, 760 260 S 1150 120, 1450 340 S 1250 720, 900 660 S 520 820, 260 620 S 120 420, 300 360' fill='none' stroke='%23555555' stroke-width='40' stroke-linecap='round'/><path d='M40 300 C 300 40, 500 420, 760 260 S 1150 120, 1450 340 S 1250 720, 900 660 S 520 820, 260 620 S 120 420, 300 360' fill='none' stroke='%23ff0000' stroke-width='6' stroke-dasharray='24 24' stroke-linecap='butt'/><path d='M40 300 C 300 40, 500 420, 760 260 S 1150 120, 1450 340 S 1250 720, 900 660 S 520 820, 260 620 S 120 420, 300 360' fill='none' stroke='%23ffffff' stroke-width='6' stroke-dasharray='24 24' stroke-dashoffset='24' stroke-linecap='butt'/></svg>");
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: 1800px 1200px;
+      inset: -100% -100% -100% -100%;
+      background:
+        repeating-linear-gradient(
+          135deg,
+          rgba(255, 150, 0, 0.32) 0px,
+          rgba(255, 150, 0, 0.32) 16px,
+          transparent 16px,
+          transparent 320px
+        );
       pointer-events: none;
       z-index: 1;
     }
@@ -135,9 +140,6 @@
   </style>
 </head>
 <body>
-
-  <!-- Drift track baggrund -->
-  <div class="track-bg"></div>
 
   <!-- Racing flags -->
   <div class="flag flag-left"></div>
