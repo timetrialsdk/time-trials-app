@@ -235,7 +235,7 @@ function openRoute(route){
 
   let rows="";
   sorted.forEach((e,i)=>{
-    const realIndex = data.routes[route].indexOf(e);   // 🔥 FIX HER
+    const realIndex=data.routes[route].indexOf(e);
 
     rows+=`
       <tr>
@@ -291,7 +291,149 @@ async function deleteEntry(route,index){
   openRoute(route);
 }
 
-/* Leaderboard + Snake er uændret og virker stadig */
+// ================= LEADERBOARD =================
+function openLeaderboard(){
+  document.getElementById("home").style.display="none";
+  const page=document.getElementById("leaderboardPage");
+  page.style.display="block";
+
+  const stats={};
+
+  for(const route of Object.keys(data.routes)){
+    const sorted=[...data.routes[route]].sort((a,b)=>timeToSeconds(a.time)-timeToSeconds(b.time));
+    sorted.forEach((run,i)=>{
+      if(!stats[run.name])stats[run.name]={runs:0,gold:0,silver:0,bronze:0};
+      stats[run.name].runs++;
+      if(i===0)stats[run.name].gold++;
+      if(i===1)stats[run.name].silver++;
+      if(i===2)stats[run.name].bronze++;
+    });
+  }
+
+  const mostRuns=Object.entries(stats).sort((a,b)=>b[1].runs-a[1].runs);
+  const mostMedals=Object.entries(stats).sort((a,b)=>
+    (b[1].gold*3+b[1].silver*2+b[1].bronze)-(a[1].gold*3+a[1].silver*2+a[1].bronze)
+  );
+
+  let col1="",col2="";
+
+  mostRuns.forEach(([n,s],i)=>{
+    col1+=`<div class="lb-row"><span>${i+1}</span><span>${n}</span><span>${s.runs}</span></div>`;
+  });
+
+  mostMedals.forEach(([n,s],i)=>{
+    col2+=`<div class="lb-row"><span>${i+1}</span><span>${n}</span><span>🥇${s.gold} 🥈${s.silver} 🥉${s.bronze}</span></div>`;
+  });
+
+  page.innerHTML=`
+    <div class="route-container">
+      <button onclick="closeLeaderboard()">← Tilbage</button>
+      <h2>LEADERBOARD</h2>
+      <div class="lb-grid">
+        <div><h3>🔥 Flest runs</h3>${col1||"Ingen data"}</div>
+        <div><h3>🏆 Flest medaljer</h3>${col2||"Ingen data"}</div>
+      </div>
+    </div>`;
+}
+
+function closeLeaderboard(){
+  document.getElementById("leaderboardPage").style.display="none";
+  document.getElementById("home").style.display="block";
+}
+
+// ================= GAMES / SNAKE =================
+let snakeInterval=null, snakeKey=null;
+
+function openGames(){
+  document.getElementById("home").style.display="none";
+  const page=document.getElementById("gamesPage");
+  page.style.display="block";
+
+  page.innerHTML=`
+    <div class="route-container">
+      <button onclick="closeGames()">← Tilbage</button>
+      <h2>SNAKE</h2>
+      <p style="text-align:center;">Tryk SPACE for at starte</p>
+      <div class="game-box">
+        <canvas id="snake" width="300" height="300"></canvas>
+      </div>
+    </div>`;
+
+  startSnake();
+}
+
+function closeGames(){
+  if(snakeInterval)clearInterval(snakeInterval);
+  if(snakeKey)document.removeEventListener("keydown",snakeKey);
+  document.getElementById("gamesPage").style.display="none";
+  document.getElementById("home").style.display="block";
+}
+
+function startSnake(){
+  const canvas=document.getElementById("snake");
+  const ctx=canvas.getContext("2d");
+  const box=15;
+
+  let snake=[{x:9*box,y:9*box}];
+  let dir="RIGHT", nextDir="RIGHT";
+  let running=false;
+  let food={x:5*box,y:5*box};
+
+  snakeKey=e=>{
+    if(e.code==="Space"){running=true;return;}
+    if((e.key==="ArrowUp"||e.key==="w")&&dir!=="DOWN")nextDir="UP";
+    if((e.key==="ArrowDown"||e.key==="s")&&dir!=="UP")nextDir="DOWN";
+    if((e.key==="ArrowLeft"||e.key==="a")&&dir!=="RIGHT")nextDir="LEFT";
+    if((e.key==="ArrowRight"||e.key==="d")&&dir!=="LEFT")nextDir="RIGHT";
+  };
+  document.addEventListener("keydown",snakeKey);
+
+  function draw(){
+    ctx.clearRect(0,0,300,300);
+
+    if(!running){
+      ctx.fillStyle="#ffb300";
+      ctx.font="16px Orbitron";
+      ctx.textAlign="center";
+      ctx.fillText("Tryk SPACE for at starte",150,150);
+      return;
+    }
+
+    dir=nextDir;
+
+    snake.forEach(p=>{
+      ctx.fillStyle="#ffb300";
+      ctx.fillRect(p.x,p.y,box,box);
+    });
+
+    ctx.fillStyle="red";
+    ctx.fillRect(food.x,food.y,box,box);
+
+    let head={x:snake[0].x,y:snake[0].y};
+    if(dir==="UP")head.y-=box;
+    if(dir==="DOWN")head.y+=box;
+    if(dir==="LEFT")head.x-=box;
+    if(dir==="RIGHT")head.x+=box;
+
+    if(head.x<0||head.y<0||head.x>=300||head.y>=300||snake.some(p=>p.x===head.x&&p.y===head.y)){
+      snake=[{x:9*box,y:9*box}];
+      running=false;
+      dir="RIGHT";
+      nextDir="RIGHT";
+      return;
+    }
+
+    if(head.x===food.x&&head.y===food.y){
+      food={x:Math.floor(Math.random()*19)*box,y:Math.floor(Math.random()*19)*box};
+    }else{
+      snake.pop();
+    }
+
+    snake.unshift(head);
+  }
+
+  snakeInterval=setInterval(draw,120);
+}
 </script>
 
 </body>
