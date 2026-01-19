@@ -179,7 +179,7 @@ function openRoute(route){
         <td>${e.car||"-"}</td>
         <td>${e.time}</td>
         <td>${e.video?`<a href="${e.video}" target="_blank">Video</a>`:"-"}</td>
-        <td><button class="trash" onclick="deleteEntry('${route}',${i})">🗑️</button></td>
+        <td><button class="trash" onclick="deleteEntry('${route}',${e.id})">🗑️</button></td>
       </tr>`;
   });
 
@@ -207,7 +207,7 @@ function closeRoute(){
   home.style.display="block";
 }
 
-// ================= RUNS (FIXET HER) =================
+// ================= RUNS =================
 async function addEntry(route){
   const nameInput  = document.getElementById("name");
   const carInput   = document.getElementById("car");
@@ -225,7 +225,13 @@ async function addEntry(route){
   }
 
   const runs = data.routes[route];
-  runs.push({ name, car, time, video });
+  runs.push({ 
+    id: Date.now(),
+    name, 
+    car, 
+    time, 
+    video 
+  });
 
   await db.collection("routes").doc(route).set({ runs });
 
@@ -235,10 +241,10 @@ async function addEntry(route){
   videoInput.value="";
 }
 
-async function deleteEntry(route,index){
-  const runs=data.routes[route];
-  runs.splice(index,1);
-  await db.collection("routes").doc(route).set({runs});
+async function deleteEntry(route,id){
+  let runs = data.routes[route];
+  runs = runs.filter(r => r.id !== id);
+  await db.collection("routes").doc(route).set({ runs });
 }
 
 async function deleteRoute(route){
