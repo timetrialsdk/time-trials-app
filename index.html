@@ -116,10 +116,25 @@
   function timeToSeconds(t) {
     if (!t) return Infinity;
 
-    // tillad både 01:23.45 og 01,23.45
-    let cleaned = t.replace(",", ":");
-    const parts = cleaned.split(":");
+    // Normaliser tid: accepter 01:23.45, 01,23.45, 01.23,45, 01:23,45
+    let cleaned = t.trim();
 
+    // erstat komma med punkt
+    cleaned = cleaned.replace(/,/g, ".");
+
+    // hvis der er to punktummer (mm.ss.xx) -> lav første om til :
+    const partsDot = cleaned.split(".");
+    if (partsDot.length === 3) {
+      cleaned = partsDot[0] + ":" + partsDot[1] + "." + partsDot[2];
+    }
+
+    // hvis format mm.ss -> lav til mm:ss
+    if (cleaned.includes(".") && !cleaned.includes(":")) {
+      const p = cleaned.split(".");
+      cleaned = p[0] + ":" + p[1];
+    }
+
+    const parts = cleaned.split(":");
     if (parts.length !== 2) return Infinity;
 
     const minutes = parseInt(parts[0], 10);
