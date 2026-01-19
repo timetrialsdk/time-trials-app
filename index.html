@@ -115,7 +115,7 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let data={routes:{}};
-let currentRoute = null;
+let currentRoute=null;
 
 // LIVE OPDATERING FRA FIREBASE
 db.collection("routes").onSnapshot(snapshot=>{
@@ -126,7 +126,6 @@ db.collection("routes").onSnapshot(snapshot=>{
 
   render();
 
-  // hvis en rute er åben → opdater den automatisk
   if(currentRoute){
     openRoute(currentRoute);
   }
@@ -168,7 +167,7 @@ function render(){
 }
 
 function openRoute(route){
-  currentRoute = route;
+  currentRoute=route;
 
   home.style.display="none";
   const page=routePage;
@@ -209,7 +208,7 @@ function openRoute(route){
 }
 
 function closeRoute(){
-  currentRoute = null;
+  currentRoute=null;
   routePage.style.display="none";
   home.style.display="block";
 }
@@ -227,20 +226,37 @@ async function addEntry(route){
   }
 
   const runs = data.routes[route];
-  runs.push({ 
+
+  const newRun = { 
     id: Date.now(),
     name, 
     car, 
     time, 
     video 
-  });
+  };
 
+  // 🔥 OPDATÉR UI MED DET SAMME
+  runs.push(newRun);
+  openRoute(route);
+
+  // send til Firebase bagefter
   await db.collection("routes").doc(route).set({ runs });
+
+  document.getElementById("name").value="";
+  document.getElementById("car").value="";
+  document.getElementById("time").value="";
+  document.getElementById("video").value="";
 }
 
 async function deleteEntry(route,id){
   let runs = data.routes[route];
+
   runs = runs.filter(r => r.id !== id);
+  data.routes[route]=runs;
+
+  // 🔥 OPDATÉR UI MED DET SAMME
+  openRoute(route);
+
   await db.collection("routes").doc(route).set({ runs });
 }
 
