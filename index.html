@@ -12,7 +12,6 @@
 <style>
 body { font-family:'Orbitron',sans-serif; background:#000; color:#ffb300; overflow-x:hidden; }
 
-/* SPEED LINES */
 body::before{
   content:"";
   position:fixed;
@@ -26,7 +25,6 @@ body::before{
   z-index:1;
 }
 
-/* FLAGS */
 .flag{
   position:fixed;
   width:180px;height:130px;
@@ -93,9 +91,7 @@ a{color:#ffb300;}
 
   <div class="menu-box">
     <input id="newRouteName" placeholder="Navn på rute">
-    <button onclick="addRoute()">Tilføj rute</button><br><br>
-    <button onclick="openLeaderboard()">🏆 Leaderboard</button>
-    <button onclick="openGames()">🎮 Games</button>
+    <button onclick="addRoute()">Tilføj rute</button>
   </div>
 
   <h2 style="text-align:center;color:red;">RUNS</h2>
@@ -119,13 +115,21 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let data={routes:{}};
+let currentRoute = null;
 
+// LIVE OPDATERING FRA FIREBASE
 db.collection("routes").onSnapshot(snapshot=>{
   data.routes={};
   snapshot.forEach(doc=>{
     data.routes[doc.id]=doc.data().runs||[];
   });
+
   render();
+
+  // hvis en rute er åben → opdater den automatisk
+  if(currentRoute){
+    openRoute(currentRoute);
+  }
 });
 
 // ================= HJÆLP =================
@@ -164,6 +168,8 @@ function render(){
 }
 
 function openRoute(route){
+  currentRoute = route;
+
   home.style.display="none";
   const page=routePage;
   page.style.display="block";
@@ -203,21 +209,17 @@ function openRoute(route){
 }
 
 function closeRoute(){
+  currentRoute = null;
   routePage.style.display="none";
   home.style.display="block";
 }
 
 // ================= RUNS =================
 async function addEntry(route){
-  const nameInput  = document.getElementById("name");
-  const carInput   = document.getElementById("car");
-  const timeInput  = document.getElementById("time");
-  const videoInput = document.getElementById("video");
-
-  const name  = nameInput.value.trim();
-  const car   = carInput.value.trim();
-  const time  = timeInput.value.trim();
-  const video = videoInput.value.trim();
+  const name  = document.getElementById("name").value.trim();
+  const car   = document.getElementById("car").value.trim();
+  const time  = document.getElementById("time").value.trim();
+  const video = document.getElementById("video").value.trim();
 
   if(!name || !time){
     alert("Navn og tid skal udfyldes");
@@ -234,11 +236,6 @@ async function addEntry(route){
   });
 
   await db.collection("routes").doc(route).set({ runs });
-
-  nameInput.value="";
-  carInput.value="";
-  timeInput.value="";
-  videoInput.value="";
 }
 
 async function deleteEntry(route,id){
