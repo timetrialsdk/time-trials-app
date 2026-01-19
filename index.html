@@ -250,6 +250,36 @@ a:hover {
     .lb-value {
       font-weight: bold;
     }
+  
+    /* GAMES / SNAKE */
+    .game-box {
+      width: 320px;
+      height: 320px;
+      background: #000;
+      border: 2px solid #ffb300;
+      margin: 20px auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 20px rgba(255,180,0,0.4);
+    }
+
+    canvas { background: #000; }
+  
+    /* GAMES / SNAKE */
+    .game-box {
+      width: 320px;
+      height: 320px;
+      background: #000;
+      border: 2px solid #ffb300;
+      margin: 20px auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 20px rgba(255,180,0,0.4);
+    }
+
+    canvas { background: #000; }
   </style>
 </head>
 <body>
@@ -269,6 +299,8 @@ a:hover {
     <input type="text" id="newRouteName" placeholder="Navn på rute" />
     <button onclick="addRoute()">Tilføj rute</button>
     <button onclick="openLeaderboard()" style="margin-top:8px;">🏆 Leaderboard</button>
+    <button onclick="openGames()" style="margin-top:8px;">🎮 Games</button>
+    <button onclick="openGames()" style="margin-top:8px;">🎮 Games</button>
   </div>
 
   <div class="runs-title">RUNS</div>
@@ -277,6 +309,12 @@ a:hover {
 
 <!-- LEADERBOARD SIDE -->
 <div class="route-page" id="leaderboardPage"></div>
+
+<!-- GAMES SIDE -->
+<div class="route-page" id="gamesPage"></div>
+
+<!-- GAMES SIDE -->
+<div class="route-page" id="gamesPage"></div>
 
 <!-- ROUTE SIDE -->
 <div class="route-page" id="routePage"></div>
@@ -517,7 +555,196 @@ a:hover {
   }
 
   render();
+  function openGames() {
+    document.getElementById("home").style.display = "none";
+    const page = document.getElementById("gamesPage");
+    page.style.display = "block";
+
+    page.innerHTML = `
+      <div class="route-container">
+        <div class="route-header">
+          <h2>GAMES – SNAKE</h2>
+          <button class="back-btn" onclick="closeGames()">← Tilbage</button>
+        </div>
+
+        <p style="text-align:center;">Brug WASD eller piletaster</p>
+
+        <div class="game-box">
+          <canvas id="snake" width="300" height="300"></canvas>
+        </div>
+      </div>
+    `;
+
+    startSnake();
+  }
+
+  function closeGames() {
+    document.getElementById("gamesPage").style.display = "none";
+    document.getElementById("home").style.display = "block";
+  }
+
+  // --- SNAKE GAME ---
+  function startSnake() {
+    const canvas = document.getElementById("snake");
+    const ctx = canvas.getContext("2d");
+
+    const box = 15;
+    let snake = [{ x: 9 * box, y: 9 * box }];
+    let direction = "RIGHT";
+
+    let food = {
+      x: Math.floor(Math.random() * 19) * box,
+      y: Math.floor(Math.random() * 19) * box
+    };
+
+    document.onkeydown = e => {
+      if (e.key === "ArrowUp" || e.key === "w") direction = "UP";
+      if (e.key === "ArrowDown" || e.key === "s") direction = "DOWN";
+      if (e.key === "ArrowLeft" || e.key === "a") direction = "LEFT";
+      if (e.key === "ArrowRight" || e.key === "d") direction = "RIGHT";
+    };
+
+    function draw() {
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let part of snake) {
+        ctx.fillStyle = "#ffb300";
+        ctx.fillRect(part.x, part.y, box, box);
+      }
+
+      ctx.fillStyle = "red";
+      ctx.fillRect(food.x, food.y, box, box);
+
+      let head = { x: snake[0].x, y: snake[0].y };
+
+      if (direction === "UP") head.y -= box;
+      if (direction === "DOWN") head.y += box;
+      if (direction === "LEFT") head.x -= box;
+      if (direction === "RIGHT") head.x += box;
+
+      if (head.x === food.x && head.y === food.y) {
+        food = {
+          x: Math.floor(Math.random() * 19) * box,
+          y: Math.floor(Math.random() * 19) * box
+        };
+      } else {
+        snake.pop();
+      }
+
+      if (
+        head.x < 0 || head.y < 0 ||
+        head.x >= canvas.width || head.y >= canvas.height ||
+        snake.some(p => p.x === head.x && p.y === head.y)
+      ) {
+        alert("Game Over!");
+        snake = [{ x: 9 * box, y: 9 * box }];
+        direction = "RIGHT";
+        return;
+      }
+
+      snake.unshift(head);
+    }
+
+    if (window.snakeInterval) clearInterval(window.snakeInterval);
+    window.snakeInterval = setInterval(draw, 120);
+  }
+  // ---------- GAMES / SNAKE ----------
+  function openGames() {
+    document.getElementById("home").style.display = "none";
+    const page = document.getElementById("gamesPage");
+    page.style.display = "block";
+
+    page.innerHTML = `
+      <div class=\"route-container\">
+        <div class=\"route-header\">
+          <h2>GAMES – SNAKE</h2>
+          <button class=\"back-btn\" onclick=\"closeGames()\">← Tilbage</button>
+        </div>
+
+        <p style=\"text-align:center;\">Brug WASD eller piletaster</p>
+
+        <div class=\"game-box\">
+          <canvas id=\"snake\" width=\"300\" height=\"300\"></canvas>
+        </div>
+      </div>
+    `;
+
+    startSnake();
+  }
+
+  function closeGames() {
+    document.getElementById("gamesPage").style.display = "none";
+    document.getElementById("home").style.display = "block";
+  }
+
+  function startSnake() {
+    const canvas = document.getElementById("snake");
+    const ctx = canvas.getContext("2d");
+
+    const box = 15;
+    let snake = [{ x: 9 * box, y: 9 * box }];
+    let direction = "RIGHT";
+
+    let food = {
+      x: Math.floor(Math.random() * 19) * box,
+      y: Math.floor(Math.random() * 19) * box
+    };
+
+    document.onkeydown = e => {
+      if (e.key === "ArrowUp" || e.key === "w") direction = "UP";
+      if (e.key === "ArrowDown" || e.key === "s") direction = "DOWN";
+      if (e.key === "ArrowLeft" || e.key === "a") direction = "LEFT";
+      if (e.key === "ArrowRight" || e.key === "d") direction = "RIGHT";
+    };
+
+    function draw() {
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let part of snake) {
+        ctx.fillStyle = "#ffb300";
+        ctx.fillRect(part.x, part.y, box, box);
+      }
+
+      ctx.fillStyle = "red";
+      ctx.fillRect(food.x, food.y, box, box);
+
+      let head = { x: snake[0].x, y: snake[0].y };
+
+      if (direction === "UP") head.y -= box;
+      if (direction === "DOWN") head.y += box;
+      if (direction === "LEFT") head.x -= box;
+      if (direction === "RIGHT") head.x += box;
+
+      if (head.x === food.x && head.y === food.y) {
+        food = {
+          x: Math.floor(Math.random() * 19) * box,
+          y: Math.floor(Math.random() * 19) * box
+        };
+      } else {
+        snake.pop();
+      }
+
+      if (
+        head.x < 0 || head.y < 0 ||
+        head.x >= canvas.width || head.y >= canvas.height ||
+        snake.some(p => p.x === head.x && p.y === head.y)
+      ) {
+        alert("Game Over!");
+        snake = [{ x: 9 * box, y: 9 * box }];
+        direction = "RIGHT";
+        return;
+      }
+
+      snake.unshift(head);
+    }
+
+    if (window.snakeInterval) clearInterval(window.snakeInterval);
+    window.snakeInterval = setInterval(draw, 120);
+  }
 </script>
 
 </body>
 </html>
+
