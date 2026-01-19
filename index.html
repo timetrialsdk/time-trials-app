@@ -222,8 +222,12 @@
     const container = document.getElementById("routes");
     container.innerHTML = "";
 
+    // FORSIDE: vis KUN top 3 hurtigste tider pr. rute
     for (const route of Object.keys(data.routes)) {
+      // sorter ALLE tider korrekt
       const sorted = [...data.routes[route]].sort((a,b) => timeToSeconds(a.time) - timeToSeconds(b.time));
+
+      // tag kun de 3 hurtigste
       const top3 = sorted.slice(0,3);
 
       let list = "";
