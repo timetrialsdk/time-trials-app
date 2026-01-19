@@ -223,11 +223,15 @@ a:hover {
     <h3>Tilføj ny rute</h3>
     <input type="text" id="newRouteName" placeholder="Navn på rute" />
     <button onclick="addRoute()">Tilføj rute</button>
+    <button onclick="openLeaderboard()" style="margin-top:8px;">🏆 Leaderboard</button>
   </div>
 
   <div class="runs-title">RUNS</div>
   <div class="routes" id="routes"></div>
 </div>
+
+<!-- LEADERBOARD SIDE -->
+<div class="route-page" id="leaderboardPage"></div>
 
 <!-- ROUTE SIDE -->
 <div class="route-page" id="routePage"></div>
@@ -370,16 +374,77 @@ a:hover {
     render();
   }
 
+  function openLeaderboard() {
+    document.getElementById("home").style.display = "none";
+    const page = document.getElementById("leaderboardPage");
+    page.style.display = "block";
+
+    // Beregn statistik
+    const stats = {};
+
+    for (const route of Object.keys(data.routes)) {
+      const sorted = [...data.routes[route]].sort((a,b) => timeToSeconds(a.time) - timeToSeconds(b.time));
+
+      sorted.forEach((run, index) => {
+        if (!stats[run.name]) {
+          stats[run.name] = { runs: 0, gold: 0, silver: 0, bronze: 0 };
+        }
+
+        stats[run.name].runs++;
+
+        if (index === 0) stats[run.name].gold++;
+        if (index === 1) stats[run.name].silver++;
+        if (index === 2) stats[run.name].bronze++;
+      });
+    }
+
+    // Sorter lister
+    const mostRuns = Object.entries(stats).sort((a,b) => b[1].runs - a[1].runs);
+    const mostRecords = Object.entries(stats).sort((a,b) => (b[1].gold*3 + b[1].silver*2 + b[1].bronze) - (a[1].gold*3 + a[1].silver*2 + a[1].bronze));
+
+    let col1 = "";
+    mostRuns.forEach(([name, s], i) => {
+      col1 += `<div>${i+1}. ${name} – ${s.runs} runs</div>`;
+    });
+
+    let col2 = "";
+    mostRecords.forEach(([name, s], i) => {
+      col2 += `<div>${i+1}. ${name} – 🥇${s.gold} 🥈${s.silver} 🥉${s.bronze}</div>`;
+    });
+
+    page.innerHTML = `
+      <div class="route-container">
+        <div class="route-header">
+          <h2>LEADERBOARD</h2>
+          <button class="back-btn" onclick="closeLeaderboard()">← Tilbage</button>
+        </div>
+
+        <div style="display:flex; gap:40px;">
+          <div style="flex:1;">
+            <h3>🔥 Flest runs</h3>
+            ${col1 || "Ingen data endnu"}
+          </div>
+
+          <div style="flex:1;">
+            <h3>🏆 Flest rekorder</h3>
+            ${col2 || "Ingen data endnu"}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function closeLeaderboard() {
+    document.getElementById("leaderboardPage").style.display = "none";
+    document.getElementById("home").style.display = "block";
+  }
+
   function render() {
     const container = document.getElementById("routes");
     container.innerHTML = "";
 
-    // FORSIDE: vis KUN top 3 hurtigste tider pr. rute
     for (const route of Object.keys(data.routes)) {
-      // sorter ALLE tider korrekt
       const sorted = [...data.routes[route]].sort((a,b) => timeToSeconds(a.time) - timeToSeconds(b.time));
-
-      // tag kun de 3 hurtigste
       const top3 = sorted.slice(0,3);
 
       let list = "";
