@@ -114,8 +114,20 @@
   function save() { localStorage.setItem("ruteData", JSON.stringify(data)); }
 
   function timeToSeconds(t) {
-    const [m, s] = t.split(":").map(Number);
-    return m * 60 + s;
+    if (!t) return Infinity;
+
+    // tillad både 01:23.45 og 01,23.45
+    let cleaned = t.replace(",", ":");
+    const parts = cleaned.split(":");
+
+    if (parts.length !== 2) return Infinity;
+
+    const minutes = parseInt(parts[0], 10);
+    const seconds = parseFloat(parts[1]);
+
+    if (isNaN(minutes) || isNaN(seconds)) return Infinity;
+
+    return minutes * 60 + seconds;
   }
 
   function medalForPlace(i) {
