@@ -5,95 +5,101 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
   <title>Time Trials</title>
 
-  <!-- Firebase -->
+  <!-- Firebase SDKs (compat – virker på GitHub Pages) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <style>
-    body { font-family: 'Orbitron', sans-serif; background: #000; color: #ffb300; padding: 20px; overflow-x:hidden; }
+    body { font-family: 'Orbitron', sans-serif; background:#000; color:#ffb300; padding:20px; overflow-x:hidden; }
 
-    body::before {
-      content:""; position:fixed; inset:-100%;
-      background: repeating-linear-gradient(135deg, rgba(255,150,0,0.32) 0px, rgba(255,150,0,0.32) 16px, transparent 16px, transparent 320px);
-      z-index:1; pointer-events:none;
+    /* Orange speed lines */
+    body::before{
+      content:"";position:fixed;inset:-100%;background:repeating-linear-gradient(135deg,rgba(255,150,0,.32) 0,rgba(255,150,0,.32) 16px,transparent 16px,transparent 320px);z-index:1;pointer-events:none;
     }
 
-    .flag { position:fixed; width:180px; height:130px; background-size:36px 36px;
-      background-image:
-        linear-gradient(45deg,#000 25%,transparent 25%),
-        linear-gradient(-45deg,#000 25%,transparent 25%),
-        linear-gradient(45deg,transparent 75%,#000 75%),
-        linear-gradient(-45deg,transparent 75%,#000 75%);
-      background-color:#fff; z-index:1;
+    /* Flags */
+    .flag{position:fixed;width:180px;height:130px;background-size:36px 36px;
+      background-image:linear-gradient(45deg,#000 25%,transparent 25%),linear-gradient(-45deg,#000 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#000 75%),linear-gradient(-45deg,transparent 75%,#000 75%);
+      background-color:#fff;z-index:1;pointer-events:none;}
+    .flag-left{top:140px;left:40px;transform:rotate(-18deg);} 
+    .flag-right{bottom:40px;right:40px;transform:rotate(12deg);} 
+
+    #home,.route-page{position:relative;z-index:2;}
+
+    .hero{text-align:center;margin-bottom:30px;}
+    .title{font-size:60px;font-weight:900;letter-spacing:6px;color:#ffb300;text-shadow:0 0 6px rgba(255,180,0,.7);} 
+    .subtitle{font-size:20px;letter-spacing:2px;color:#ffb300;} 
+
+    .add-route{max-width:320px;margin:20px auto;background:#111;padding:15px;border-radius:8px;text-align:center;} 
+
+    .runs-title{text-align:center;font-size:36px;font-weight:900;color:#ff3333;margin-bottom:15px;letter-spacing:4px;text-shadow:0 0 10px red;} 
+
+    .routes{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;padding-top:20px;} 
+
+    .route-card{background:#111;padding:15px;border-radius:8px;width:260px;cursor:pointer;transition:.2s;} 
+    .route-card:hover{transform:translateY(-6px) scale(1.03);box-shadow:0 0 18px rgba(255,180,0,.4);} 
+
+    .route-page{position:fixed;inset:0;background:#000;display:none;overflow-y:auto;padding:30px;z-index:1000;} 
+
+    .route-container{max-width:900px;margin:auto;background:#111;padding:25px;border-radius:12px;box-shadow:0 0 30px rgba(0,0,0,.7);} 
+
+    .route-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;} 
+
+    .back-btn{background:none;border:1px solid #ffb300;color:#ffb300;font-size:16px;padding:6px 10px;border-radius:4px;cursor:pointer;transition:.15s;} 
+    .back-btn:hover{transform:scale(1.08);box-shadow:0 0 10px rgba(255,180,0,.6);} 
+
+    .form-row{display:flex;gap:8px;margin-bottom:10px;} 
+
+    .form-row input{padding:6px;font-size:14px;border-radius:4px;background:#000;color:#ffb300;border:1px solid #ffb300;} 
+
+    .name-input{width:120px;} .car-input{width:120px;} .time-input{width:90px;} .video-input{flex:1;} 
+
+    button{padding:6px 10px;background:#222;color:#ffb300;border:1px solid #ffb300;border-radius:4px;cursor:pointer;transition:.15s;} 
+    button:hover{transform:scale(1.08);box-shadow:0 0 10px rgba(255,180,0,.6);color:#ffd65c;} 
+
+    table{width:100%;border-collapse:collapse;margin-top:10px;} 
+    th,td{border:1px solid #333;padding:6px;text-align:center;} th{background:#222;color:#ffb300;} 
+
+    .trash{background:none;border:none;color:red;cursor:pointer;} 
+
+    .leaderboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:20px;} 
+
+    .lb-row{display:grid;grid-template-columns:40px 1fr auto;padding:10px;border:1px solid #333;border-radius:6px;margin-bottom:8px;} 
+
+    /* Snake */
+    .game-box{width:320px;height:320px;background:#000;border:2px solid #ffb300;margin:20px auto;box-shadow:0 0 20px rgba(255,180,0,.4);} 
+
+    /* Password overlay */
+    #lock{
+      position:fixed;inset:0;background:#000;z-index:5000;display:flex;flex-direction:column;align-items:center;justify-content:center;
     }
-    .flag-left { top:140px; left:40px; transform:rotate(-18deg); }
-    .flag-right { bottom:40px; right:40px; transform:rotate(12deg); }
-
-    #home,.route-page,#login { position:relative; z-index:2; }
-
-    .title { font-size:60px; font-weight:900; letter-spacing:6px; text-align:center; text-shadow:0 0 10px orange; }
-    .subtitle { text-align:center; margin-bottom:20px; }
-
-    .add-route { max-width:320px; margin:20px auto; background:#111; padding:15px; border-radius:8px; text-align:center; }
-
-    .runs-title { text-align:center; font-size:36px; color:red; text-shadow:0 0 10px red; }
-
-    .routes { display:flex; gap:20px; flex-wrap:wrap; justify-content:center; }
-
-    .route-card {
-      background:#111; padding:15px; border-radius:8px; width:260px; cursor:pointer;
-      transition:.2s;
-    }
-    .route-card:hover { transform:translateY(-6px) scale(1.05); box-shadow:0 0 20px orange; }
-
-    .route-page { position:fixed; inset:0; background:#000; display:none; padding:30px; z-index:1000; }
-
-    .route-container { max-width:900px; margin:auto; background:#111; padding:25px; border-radius:12px; }
-
-    button {
-      background:#222; color:#ffb300; border:1px solid #ffb300; border-radius:6px; padding:6px 12px;
-      cursor:pointer; transition:.15s;
-    }
-    button:hover { transform:scale(1.1); box-shadow:0 0 12px orange; color:#ffd65c; }
-
-    table { width:100%; border-collapse:collapse; margin-top:10px; }
-    th,td { border:1px solid #333; padding:6px; text-align:center; }
-
-    /* LOGIN */
-    #login {
-      position:fixed; inset:0; background:#000; display:flex; flex-direction:column;
-      justify-content:center; align-items:center;
-    }
-    #login h1 { font-size:50px; color:#ffb300; margin-bottom:20px; }
-    #login input { padding:10px; font-size:18px; }
-
-    /* SNAKE */
-    .game-box { width:320px; height:320px; border:2px solid #ffb300; margin:auto; }
+    #lock h1{color:#ffb300;font-size:42px;margin-bottom:20px;}
+    #lock input{padding:10px;font-size:18px;background:#000;color:#ffb300;border:1px solid #ffb300;}
   </style>
 </head>
-
 <body>
 
-<div class="flag flag-left"></div>
-<div class="flag flag-right"></div>
-
-<!-- LOGIN -->
-<div id="login">
-  <h1>ALLE KAN KØRE BILEN,<br>MEN IKKE ALLE HAR RETTEN</h1>
+<div id="lock">
+  <h1>ALLE KAN KØRE BILEN,<br>MEN IKKE ALLE HAR RET</h1>
   <input id="pw" placeholder="Kodeord">
   <br><br>
   <button onclick="checkPassword()">Lås op</button>
 </div>
 
+<div class="flag flag-left"></div>
+<div class="flag flag-right"></div>
+
 <div id="home" style="display:none;">
-  <div class="title">TIME TRIALS</div>
-  <div class="subtitle">hvis ikke du ryster, var det ikke hurtigt nok</div>
+  <div class="hero">
+    <div class="title">TIME TRIALS</div>
+    <div class="subtitle">hvis ikke du ryster, var det ikke hurtigt nok</div>
+  </div>
 
   <div class="add-route">
     <h3>Tilføj ny rute</h3>
-    <input id="newRouteName" placeholder="Navn på rute"><br><br>
-    <button onclick="addRoute()">Tilføj rute</button><br><br>
-    <button onclick="openLeaderboard()">🏆 Leaderboard</button><br><br>
+    <input type="text" id="newRouteName" placeholder="Navn på rute" /><br>
+    <button onclick="addRoute()">Tilføj rute</button><br>
+    <button onclick="openLeaderboard()">🏆 Leaderboard</button><br>
     <button onclick="openGames()">🎮 Games</button>
   </div>
 
@@ -101,33 +107,33 @@
   <div class="routes" id="routes"></div>
 </div>
 
-<div class="route-page" id="routePage"></div>
 <div class="route-page" id="leaderboardPage"></div>
+<div class="route-page" id="routePage"></div>
 <div class="route-page" id="gamesPage"></div>
 
 <script>
-// 🔐 LOGIN
+// ================= PASSWORD =================
 function checkPassword(){
-  const pw = document.getElementById("pw").value;
-  if(pw === "AK47-DRIFT-TUNE"){
-    localStorage.setItem("access","true");
-    document.getElementById("login").style.display="none";
-    document.getElementById("home").style.display="block";
-  } else alert("Forkert kodeord");
+  const pw=document.getElementById('pw').value;
+  if(pw==="AK47-DRIFT-TUNE"){
+    document.getElementById('lock').style.display="none";
+    document.getElementById('home').style.display="block";
+  } else alert("Forkert kode");
 }
 
-if(localStorage.getItem("access")==="true"){
-  document.getElementById("login").style.display="none";
-  document.getElementById("home").style.display="block";
-}
+// ================= FIREBASE =================
+const firebaseConfig={
+  apiKey:"AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
+  authDomain:"time-trials-b519e.firebaseapp.com",
+  projectId:"time-trials-b519e",
+  storageBucket:"time-trials-b519e.appspot.com",
+  messagingSenderId:"491396428595",
+  appId:"1:491396428595:web:627bc61e5cd1b9475fc446"
+};
 
-// 🔥 FIREBASE
-firebase.initializeApp({
-  apiKey: "AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
-  authDomain: "time-trials-b519e.firebaseapp.com",
-  projectId: "time-trials-b519e"
-});
-const db = firebase.firestore();
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+
 let data={routes:{}};
 
 db.collection("routes").onSnapshot(snap=>{
@@ -136,92 +142,114 @@ db.collection("routes").onSnapshot(snap=>{
   render();
 });
 
-// 🛣 ROUTES
-async function addRoute(){
+// ================= ROUTES =================
+function addRoute(){
   const name=document.getElementById("newRouteName").value.trim();
   if(!name) return;
-  await db.collection("routes").doc(name).set({runs:[]});
+  db.collection("routes").doc(name).set({runs:[]});
 }
 
 function openRoute(route){
-  document.getElementById("home").style.display="none";
-  const page=document.getElementById("routePage");
-  page.style.display="block";
+  home.style.display="none";
+  routePage.style.display="block";
 
+  const runs=data.routes[route]||[];
   let rows="";
-  (data.routes[route]||[]).forEach((e,i)=>{
-    rows+=`<tr><td>${i+1}</td><td>${e.name}</td><td>${e.car||"-"}</td><td>${e.time}</td>
-    <td>${e.video?`<a href="${e.video}" target="_blank">Video</a>`:"-"}</td></tr>`;
+  runs.forEach((e,i)=>{
+    rows+=`<tr><td>${i+1}</td><td>${e.name}</td><td>${e.car||"-"}</td><td>${e.time}</td><td>${e.video?`<a href='${e.video}' target='_blank'>Video</a>`:"-"}</td><td><button class='trash' onclick='deleteEntry("${route}",${i})'>🗑️</button></td></tr>`;
   });
 
-  page.innerHTML=`
-  <div class="route-container">
-    <button onclick="closeRoute()">← Tilbage</button>
-    <h2>${route}</h2>
-    <input id="name" placeholder="Navn">
-    <input id="car" placeholder="Bil">
-    <input id="time" placeholder="mm:ss">
-    <input id="video" placeholder="Video">
-    <button onclick="addEntry('${route}')">+ Run</button>
-    <table><tr><th>#</th><th>Navn</th><th>Bil</th><th>Tid</th><th>Video</th></tr>${rows}</table>
+  routePage.innerHTML=`
+  <div class='route-container'>
+    <div class='route-header'><h2>${route}</h2><button class='back-btn' onclick='closeRoute()'>← Tilbage</button></div>
+    <div class='form-row'>
+      <input class='name-input' id='name' placeholder='Navn'>
+      <input class='car-input' id='car' placeholder='Bil'>
+      <input class='time-input' id='time' placeholder='mm:ss'>
+      <input class='video-input' id='video' placeholder='Video link'>
+      <button onclick='addEntry("${route}")'>+ Run</button>
+    </div>
+    <table><thead><tr><th>#</th><th>Navn</th><th>Bil</th><th>Tid</th><th>Video</th><th></th></tr></thead><tbody>${rows}</tbody></table>
   </div>`;
 }
 
-function closeRoute(){ document.getElementById("routePage").style.display="none"; document.getElementById("home").style.display="block"; }
+function closeRoute(){routePage.style.display="none";home.style.display="block";}
 
-async function addEntry(route){
+function addEntry(route){
   const runs=data.routes[route]||[];
-  runs.push({
-    name:document.getElementById("name").value,
-    car:document.getElementById("car").value,
-    time:document.getElementById("time").value,
-    video:document.getElementById("video").value
-  });
-  await db.collection("routes").doc(route).set({runs});
-  openRoute(route);
+  runs.push({name:name.value,car:car.value,time:time.value,video:video.value});
+  db.collection("routes").doc(route).set({runs});
 }
 
-// 🏆 LEADERBOARD
+function deleteEntry(route,i){
+  const runs=data.routes[route];runs.splice(i,1);
+  db.collection("routes").doc(route).set({runs});
+}
+
+// ================= LEADERBOARD =================
 function openLeaderboard(){
-  document.getElementById("home").style.display="none";
-  const page=document.getElementById("leaderboardPage");
-  page.style.display="block";
-  page.innerHTML=`<div class="route-container"><button onclick="closeLeaderboard()">← Tilbage</button><h2>LEADERBOARD</h2></div>`;
+  home.style.display="none";
+  leaderboardPage.style.display="block";
+  leaderboardPage.innerHTML=`<div class='route-container'><div class='route-header'><h2>LEADERBOARD</h2><button class='back-btn' onclick='closeLeaderboard()'>← Tilbage</button></div><p>Kommer her…</p></div>`;
 }
-function closeLeaderboard(){ document.getElementById("leaderboardPage").style.display="none"; document.getElementById("home").style.display="block"; }
 
-// 🎮 GAMES
+function closeLeaderboard(){leaderboardPage.style.display="none";home.style.display="block";}
+
+// ================= GAMES / SNAKE =================
 function openGames(){
-  document.getElementById("home").style.display="none";
-  const page=document.getElementById("gamesPage");
-  page.style.display="block";
-  page.innerHTML=`<div class="route-container"><button onclick="closeGames()">← Tilbage</button><h2>SNAKE</h2><div class="game-box"><canvas id="snake" width="300" height="300"></canvas></div></div>`;
+  home.style.display="none";
+  gamesPage.style.display="block";
+  gamesPage.innerHTML=`<div class='route-container'><div class='route-header'><h2>SNAKE</h2><button class='back-btn' onclick='closeGames()'>← Tilbage</button></div><div class='game-box'><canvas id='snake' width='300' height='300'></canvas></div></div>`;
+  startSnake();
 }
-function closeGames(){ document.getElementById("gamesPage").style.display="none"; document.getElementById("home").style.display="block"; }
 
-// 🏠 RENDER
+function closeGames(){gamesPage.style.display="none";home.style.display="block";}
+
+function startSnake(){
+  const c=document.getElementById("snake");
+  const ctx=c.getContext("2d");
+  const box=15;
+  let snake=[{x:9*box,y:9*box}];
+  let dir="RIGHT";
+  let food={x:5*box,y:5*box};
+
+  document.onkeydown=e=>{
+    if(e.key==="ArrowUp")dir="UP";
+    if(e.key==="ArrowDown")dir="DOWN";
+    if(e.key==="ArrowLeft")dir="LEFT";
+    if(e.key==="ArrowRight")dir="RIGHT";
+  };
+
+  setInterval(()=>{
+    ctx.clearRect(0,0,300,300);
+    snake.forEach(p=>{ctx.fillStyle="#ffb300";ctx.fillRect(p.x,p.y,box,box);});
+    ctx.fillStyle="red";ctx.fillRect(food.x,food.y,box,box);
+
+    let head={...snake[0]};
+    if(dir==="UP")head.y-=box;
+    if(dir==="DOWN")head.y+=box;
+    if(dir==="LEFT")head.x-=box;
+    if(dir==="RIGHT")head.x+=box;
+
+    if(head.x===food.x && head.y===food.y){
+      food={x:Math.floor(Math.random()*19)*box,y:Math.floor(Math.random()*19)*box};
+    } else snake.pop();
+
+    snake.unshift(head);
+  },120);
+}
+
+// ================= RENDER =================
 function render(){
-  const container=document.getElementById("routes");
-  container.innerHTML="";
-  for(const r in data.routes){
+  routes.innerHTML="";
+  for(const route in data.routes){
     const card=document.createElement("div");
     card.className="route-card";
-    card.innerHTML=`<h3>${r}</h3>`;
-    card.onclick=()=>openRoute(r);
-    container.appendChild(card);
+    card.innerHTML=`<h3>${route}</h3>`;
+    card.onclick=()=>openRoute(route);
+    routes.appendChild(card);
   }
 }
-
-// 🔧 GØR FUNKTIONER GLOBALE (FIX)
-window.openRoute=openRoute;
-window.addRoute=addRoute;
-window.addEntry=addEntry;
-window.openLeaderboard=openLeaderboard;
-window.closeLeaderboard=closeLeaderboard;
-window.openGames=openGames;
-window.closeGames=closeGames;
-window.closeRoute=closeRoute;
 </script>
-
 </body>
 </html>
