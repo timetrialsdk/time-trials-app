@@ -475,7 +475,7 @@ function render() {
 
     let list = "";
     top3.forEach((e, i) => {
-      list += `<div><span class="medal">${medalForPlace(i)}</span> ${e.name} (${e.car || "-"}) – ${e.time}</div>`;
+      list += `<div><span class="medal">${medalForPlace(i)}</span> ${e.name} – ${e.time}</div>`;
     });
 
     const card = document.createElement("div");
