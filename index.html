@@ -21,7 +21,38 @@
           transparent 320px
         );
       pointer-events: none;
-      z-index: 0;
+      z-index: 1;
+    }
+
+    /* RACE FLAG DESIGN */
+    .flag {
+      position: fixed;
+      width: 220px;
+      height: 160px;
+      background-size: 40px 40px;
+      background-image:
+        linear-gradient(45deg, #000 25%, transparent 25%),
+        linear-gradient(-45deg, #000 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #000 75%),
+        linear-gradient(-45deg, transparent 75%, #000 75%);
+      background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+      background-color: #fff;
+      opacity: 0.25;
+      filter: drop-shadow(0 0 12px rgba(255, 150, 0, 0.5));
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .flag-left {
+      top: 140px;
+      left: 40px;
+      transform: rotate(-18deg);
+    }
+
+    .flag-right {
+      bottom: 40px;
+      right: 40px;
+      transform: rotate(12deg);
     }
 
     /* Ekstra lag så de krydser hinanden og ser mere random ud */
@@ -148,6 +179,10 @@
   </style>
 </head>
 <body>
+
+  <!-- Racing flags i baggrunden -->
+  <div class="flag flag-left"></div>
+  <div class="flag flag-right"></div>
 
 <div id="home">
   <div class="hero">
