@@ -459,14 +459,6 @@ a:hover {
 
     let col2 = "";
     mostRecords.forEach(([name, s], i) => {
-      col2 += `
-        <div class=\"lb-row\">
-          <span class=\"lb-rank\">${i+1}</span>
-          <span class=\"lb-name\">${name}</span>
-          <span class=\"lb-value\">🥇${s.gold} 🥈${s.silver} 🥉${s.bronze}</span>
-        </div>`;
-    });
-    mostRecords.forEach(([name, s], i) => {
       col2 += `<div>${i+1}. ${name} – 🥇${s.gold} 🥈${s.silver} 🥉${s.bronze}</div>`;
     });
 
