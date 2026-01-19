@@ -5,7 +5,32 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
   <title>Rute Konkurrence</title>
   <style>
-    body { font-family: 'Orbitron', sans-serif; background: #000; color: #ffb300; padding: 20px; }
+    body { font-family: 'Orbitron', sans-serif; background: #000; color: #ffb300; padding: 20px; position: relative; overflow-x: hidden; }
+
+    /* ORANGE SPEED LINES I BAGGRUNDEN */
+    body::before {
+      content: "";
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: repeating-linear-gradient(
+        135deg,
+        rgba(255, 170, 0, 0.08) 0px,
+        rgba(255, 170, 0, 0.08) 6px,
+        transparent 6px,
+        transparent 120px
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* sørg for at alt indhold ligger OVER stregerne */
+    #home, .route-page {
+      position: relative;
+      z-index: 1;
+    }
 
     .hero { text-align: center; margin-bottom: 30px; }
     .title {
