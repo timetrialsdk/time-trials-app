@@ -17,25 +17,48 @@
     .route-card { background: #111; padding: 15px; border-radius: 8px; width: 260px; cursor: pointer; }
     .route-card:hover { background: #1a1a1a; }
 
+    /* FULLSCREEN OVERLAY */
     .editor {
       position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      justify-content: center;
+      align-items: flex-end;
+      padding-bottom: 30px;
+      z-index: 1000;
+    }
+
+    /* SELVE PANELET (lille og skarpt) */
+    .editor-panel {
       background: #111;
-      padding: 15px;
+      padding: 20px;
       border-radius: 10px;
-      max-width: 600px;
-      width: 90%;
-      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+      width: 600px;
+      max-width: 90%;
+      box-shadow: 0 0 25px rgba(0,0,0,0.7);
+    }
+
+    .editor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: #f5c400;
+      font-size: 20px;
+      cursor: pointer;
     }
 
     /* Kompakt input-design */
-    .form-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
+    .form-row { display: flex; gap: 8px; margin-bottom: 10px; }
 
     .form-row input {
       padding: 6px;
@@ -59,16 +82,7 @@
 
     a { color: #4da6ff; }
 
-    /* Lille skraldespand */
-    .trash {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: red;
-      font-size: 14px;
-      padding: 2px 4px;
-    }
-
+    .trash { background: none; border: none; cursor: pointer; color: red; font-size: 14px; padding: 2px 4px; }
     .trash:hover { color: #ff4444; }
 
     .medal { font-size: 20px; }
@@ -90,7 +104,8 @@
 <h2 style="text-align:center">Forside – Top 3 tider</h2>
 <div class="routes" id="routes"></div>
 
-<div class="editor" id="editor" style="display:none"></div>
+<!-- FULLSCREEN EDITOR -->
+<div class="editor" id="editor"></div>
 
 <script>
   let data = JSON.parse(localStorage.getItem("ruteData"));
@@ -123,9 +138,13 @@
     document.getElementById("newRouteName").value = "";
   }
 
+  function closeEditor() {
+    document.getElementById("editor").style.display = "none";
+  }
+
   function openRoute(route) {
     const editor = document.getElementById("editor");
-    editor.style.display = "block";
+    editor.style.display = "flex";
 
     const sortedRuns = [...data.routes[route]].sort((a,b) => timeToSeconds(a.time) - timeToSeconds(b.time));
 
@@ -144,23 +163,28 @@
     });
 
     editor.innerHTML = `
-      <h2>${route}</h2>
+      <div class="editor-panel">
+        <div class="editor-header">
+          <h2>${route}</h2>
+          <button class="close-btn" onclick="closeEditor()">✖</button>
+        </div>
 
-      <div class="form-row">
-        <input class="name-input" type="text" id="name" placeholder="Navn" />
-        <input class="time-input" type="text" id="time" placeholder="mm:ss" />
-        <input class="video-input" type="url" id="video" placeholder="Video link" />
-        <button onclick="addEntry('${route}')">+ Run</button>
+        <div class="form-row">
+          <input class="name-input" type="text" id="name" placeholder="Navn" />
+          <input class="time-input" type="text" id="time" placeholder="mm:ss" />
+          <input class="video-input" type="url" id="video" placeholder="Video link" />
+          <button onclick="addEntry('${route}')">+ Run</button>
+        </div>
+
+        <button onclick="deleteRoute('${route}')" style="background:#a00000">Slet rute</button>
+
+        <table>
+          <thead>
+            <tr><th>Plads</th><th>Navn</th><th>Tid</th><th>Video</th><th></th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
       </div>
-
-      <button onclick="deleteRoute('${route}')" style="background:#a00000">Slet rute</button>
-
-      <table>
-        <thead>
-          <tr><th>Plads</th><th>Navn</th><th>Tid</th><th>Video</th><th></th></tr>
-        </thead>
-        <tbody>${rows}</tbody>
-      </table>
     `;
   }
 
@@ -188,7 +212,7 @@
     if (!confirm(`Slet ruten \"${route}\"?`)) return;
     delete data.routes[route];
     save();
-    document.getElementById("editor").style.display = "none";
+    closeEditor();
     render();
   }
 
