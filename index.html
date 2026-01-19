@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
-  <title>Rute Konkurrence</title>
+  <title>Time Trials</title>
+
   <style>
     body { font-family: 'Orbitron', sans-serif; background: #000; color: #ffb300; padding: 20px; position: relative; overflow-x: hidden; }
 
@@ -15,10 +16,10 @@
       background:
         repeating-linear-gradient(
           135deg,
-          rgba(255, 150, 0, 0.32) 0px,
-          rgba(255, 150, 0, 0.32) 16px,
+          rgba(255, 150, 0, 0.28) 0px,
+          rgba(255, 150, 0, 0.28) 16px,
           transparent 16px,
-          transparent 320px
+          transparent 300px
         );
       pointer-events: none;
       z-index: 1;
@@ -42,131 +43,52 @@
       z-index: 1;
     }
 
-    .flag-left {
-      top: 140px;
-      left: 40px;
-      transform: rotate(-18deg);
-    }
+    .flag-left { top: 140px; left: 40px; transform: rotate(-18deg); }
+    .flag-right { bottom: 40px; right: 40px; transform: rotate(12deg); }
 
-    .flag-right {
-      bottom: 40px;
-      right: 40px;
-      transform: rotate(12deg);
-    }
-
-    /* Ekstra lag så de krydser hinanden og ser mere random ud */
-    
-
-    /* sørg for at alt indhold ligger OVER stregerne */
-    #home, .route-page {
-      position: relative;
-      z-index: 1;
-    }
+    #home, .route-page { position: relative; z-index: 2; }
 
     .hero { text-align: center; margin-bottom: 30px; }
     .title {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 60px;
-      font-weight: 900;
+      font-size: 60px; font-weight: 900; letter-spacing: 6px; text-transform: uppercase;
       color: #ffb300;
-      letter-spacing: 6px;
-      text-transform: uppercase;
-      text-shadow:
-        0 0 3px rgba(255, 179, 0, 0.7),
-        0 0 6px rgba(255, 140, 0, 0.5);
+      text-shadow: 0 0 3px rgba(255, 179, 0, 0.7), 0 0 6px rgba(255, 140, 0, 0.5);
     }
-    .subtitle {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 20px;
-      font-weight: 500;
-      color: #ffb300;
-      margin-top: 10px;
-      letter-spacing: 2px;
-      text-shadow:
-        0 0 2px rgba(255, 179, 0, 0.6),
-        0 0 5px rgba(255, 140, 0, 0.4);
-    }
+    .subtitle { font-size: 20px; letter-spacing: 2px; color: #ffb300; }
 
     .add-route { max-width: 320px; margin: 20px auto; background: #111; padding: 15px; border-radius: 8px; text-align: center; }
 
     .runs-title {
-      text-align: center;
-      font-size: 36px;
-      font-family: 'Orbitron', sans-serif;
-      font-weight: 900;
-      color: #ff3333;
-      margin-bottom: 15px;
-      letter-spacing: 4px;
-      text-shadow:
-        0 0 4px rgba(255, 0, 0, 0.7),
-        0 0 10px rgba(255, 80, 80, 0.6),
-        0 0 18px rgba(255, 120, 120, 0.4);
+      text-align: center; font-size: 36px; font-weight: 900; color: #ff3333; margin-bottom: 15px; letter-spacing: 4px;
+      text-shadow: 0 0 4px rgba(255,0,0,0.7), 0 0 10px rgba(255,80,80,0.6), 0 0 18px rgba(255,120,120,0.4);
     }
 
     .routes { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding-top: 20px; }
 
     .route-card {
-      background: #111;
-      padding: 15px;
-      border-radius: 8px;
-      width: 260px;
-      cursor: pointer;
+      background: #111; padding: 15px; border-radius: 8px; width: 260px; cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .route-card:hover {
-      background: #1a1a1a;
-      transform: translateY(-6px) scale(1.03);
-      box-shadow: 0 0 18px rgba(255, 180, 0, 0.4);
-    }
+    .route-card:hover { transform: translateY(-6px) scale(1.03); box-shadow: 0 0 18px rgba(255, 180, 0, 0.4); }
 
-    /* ROUTE SIDE (fuld skærm side) */
+    /* FULLSCREEN PAGES */
     .route-page {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: #000;
-      display: none;
-      overflow-y: auto;
-      padding: 30px;
-      z-index: 1000;
+      position: fixed; inset: 0; background: #000; display: none; overflow-y: auto; padding: 30px; z-index: 1000;
     }
 
     .route-container {
-      max-width: 900px;
-      margin: auto;
-      background: #111;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 0 30px rgba(0,0,0,0.7);
+      max-width: 900px; margin: auto; background: #111; padding: 25px; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.7);
     }
 
-    .route-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
+    .route-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 
-    .back-btn {
-      background: none;
-      border: none;
-      color: #f5c400;
-      font-size: 18px;
-      cursor: pointer;
-    }
+    .back-btn { background: none; border: none; color: #f5c400; font-size: 18px; cursor: pointer; }
 
-    /* Kompakt input-design */
+    /* INPUT DESIGN */
     .form-row { display: flex; gap: 8px; margin-bottom: 10px; }
 
     .form-row input {
-      padding: 6px;
-      font-size: 14px;
-      border-radius: 4px;
-      background: #000;
-      color: #ffb300;
-      border: 1px solid #ffb300;
+      padding: 6px; font-size: 14px; border-radius: 4px; background: #000; color: #ffb300; border: 1px solid #ffb300;
     }
 
     .name-input { width: 120px; }
@@ -174,108 +96,42 @@
     .video-input { flex: 1; }
 
     button {
-      padding: 6px 10px;
-      background: #222;
-      color: #ffb300;
-      cursor: pointer;
-      border: 1px solid #ffb300;
-      border-radius: 4px;
+      padding: 6px 10px; background: #222; color: #ffb300; cursor: pointer; border: 1px solid #ffb300; border-radius: 4px;
       transition: transform 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
     }
 
-    button:hover {
-      transform: scale(1.08);
-      box-shadow: 0 0 10px rgba(255, 180, 0, 0.6);
-      color: #ffd65c;
-    }
-    button:hover { background: #666; }
+    button:hover { transform: scale(1.08); box-shadow: 0 0 10px rgba(255, 180, 0, 0.6); color: #ffd65c; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
     th, td { border: 1px solid #333; padding: 6px; text-align: center; }
     th { background: #222; color: #ffb300; }
 
-    a { color: #ffb300; transition: transform 0.15s ease, text-shadow 0.15s ease; }
-
-a:hover {
-      transform: scale(1.05);
-      text-shadow: 0 0 8px rgba(255, 180, 0, 0.6);
-    }
+    a { color: #ffb300; }
 
     .trash { background: none; border: none; cursor: pointer; color: red; font-size: 14px; padding: 2px 4px; }
-    .trash:hover { color: #ff4444; }
 
     .medal { font-size: 20px; }
 
-    /* LEADERBOARD DESIGN */
-    .leaderboard-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
-      margin-top: 20px;
-    }
+    /* LEADERBOARD */
+    .leaderboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px; }
 
-    .lb-col h3 {
-      text-align: center;
-      margin-bottom: 15px;
-      text-shadow: 0 0 6px rgba(255,180,0,0.6);
-    }
+    .lb-col h3 { text-align: center; margin-bottom: 15px; text-shadow: 0 0 6px rgba(255,180,0,0.6); }
 
     .lb-row {
-      display: grid;
-      grid-template-columns: 40px 1fr auto;
-      align-items: center;
-      padding: 10px 12px;
-      margin-bottom: 8px;
-      background: #111;
-      border: 1px solid #333;
-      border-radius: 6px;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      display: grid; grid-template-columns: 40px 1fr auto; align-items: center; padding: 10px 12px; margin-bottom: 8px;
+      background: #111; border: 1px solid #333; border-radius: 6px; transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .lb-row:hover {
-      transform: scale(1.02);
-      box-shadow: 0 0 10px rgba(255,180,0,0.4);
-    }
+    .lb-row:hover { transform: scale(1.02); box-shadow: 0 0 10px rgba(255,180,0,0.4); }
 
-    .lb-rank {
-      font-weight: bold;
-      color: #ffb300;
-      text-align: center;
-    }
+    .lb-rank { font-weight: bold; color: #ffb300; text-align: center; }
+    .lb-name { padding-left: 8px; }
+    .lb-value { font-weight: bold; }
 
-    .lb-name {
-      padding-left: 8px;
-    }
-
-    .lb-value {
-      font-weight: bold;
-    }
-  
-    /* GAMES / SNAKE */
+    /* SNAKE */
     .game-box {
-      width: 320px;
-      height: 320px;
-      background: #000;
-      border: 2px solid #ffb300;
-      margin: 20px auto;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      box-shadow: 0 0 20px rgba(255,180,0,0.4);
-    }
-
-    canvas { background: #000; }
-  
-    /* GAMES / SNAKE */
-    .game-box {
-      width: 320px;
-      height: 320px;
-      background: #000;
-      border: 2px solid #ffb300;
-      margin: 20px auto;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      width: 320px; height: 320px; background: #000; border: 2px solid #ffb300;
+      margin: 20px auto; display: flex; justify-content: center; align-items: center;
       box-shadow: 0 0 20px rgba(255,180,0,0.4);
     }
 
@@ -284,7 +140,7 @@ a:hover {
 </head>
 <body>
 
-  <!-- Racing flags i baggrunden -->
+  <!-- Racing flags -->
   <div class="flag flag-left"></div>
   <div class="flag flag-right"></div>
 
@@ -297,482 +153,337 @@ a:hover {
   <div class="add-route">
     <h3>Tilføj ny rute</h3>
     <input type="text" id="newRouteName" placeholder="Navn på rute" />
-    <button onclick="addRoute()">Tilføj rute</button>
-    <button onclick="openLeaderboard()" style="margin-top:8px;">🏆 Leaderboard</button>
-    <button onclick="openGames()" style="margin-top:8px;">🎮 Games</button>
-    
-    
+    <br>
+    <button onclick="addRoute()">Tilføj rute</button><br>
+    <button onclick="openLeaderboard()">🏆 Leaderboard</button><br>
+    <button onclick="openGames()">🎮 Games</button>
   </div>
 
   <div class="runs-title">RUNS</div>
   <div class="routes" id="routes"></div>
 </div>
 
-<!-- LEADERBOARD SIDE -->
+<!-- LEADERBOARD PAGE -->
 <div class="route-page" id="leaderboardPage"></div>
 
-<!-- GAMES SIDE -->
-<div class="route-page" id="gamesPage"></div>
-
-<!-- GAMES SIDE -->
-<div class="route-page" id="gamesPage"></div>
-
-<!-- ROUTE SIDE -->
+<!-- ROUTE PAGE -->
 <div class="route-page" id="routePage"></div>
 
+<!-- GAMES PAGE -->
+<div class="route-page" id="gamesPage"></div>
+
 <script>
-  let data = JSON.parse(localStorage.getItem("ruteData"));
-  if (!data || !data.routes) data = { routes: {} };
+// ---------------- DATA ----------------
+let data = JSON.parse(localStorage.getItem("ruteData"));
+if (!data || !data.routes) data = { routes: {} };
+function save() { localStorage.setItem("ruteData", JSON.stringify(data)); }
 
-  function save() { localStorage.setItem("ruteData", JSON.stringify(data)); }
-
-  function timeToSeconds(t) {
-    if (!t) return Infinity;
-
-    // Normaliser tid: accepter 01:23.45, 01,23.45, 01.23,45, 01:23,45
-    let cleaned = t.trim();
-
-    // erstat komma med punkt
-    cleaned = cleaned.replace(/,/g, ".");
-
-    // hvis der er to punktummer (mm.ss.xx) -> lav første om til :
-    const partsDot = cleaned.split(".");
-    if (partsDot.length === 3) {
-      cleaned = partsDot[0] + ":" + partsDot[1] + "." + partsDot[2];
-    }
-
-    // hvis format mm.ss -> lav til mm:ss
-    if (cleaned.includes(".") && !cleaned.includes(":")) {
-      const p = cleaned.split(".");
-      cleaned = p[0] + ":" + p[1];
-    }
-
-    const parts = cleaned.split(":");
-    if (parts.length !== 2) return Infinity;
-
-    const minutes = parseInt(parts[0], 10);
-    const seconds = parseFloat(parts[1]);
-
-    if (isNaN(minutes) || isNaN(seconds)) return Infinity;
-
-    return minutes * 60 + seconds;
+// ---------------- TIME PARSER ----------------
+function timeToSeconds(t) {
+  if (!t) return Infinity;
+  let cleaned = t.trim().replace(/,/g, ".");
+  const partsDot = cleaned.split(".");
+  if (partsDot.length === 3) cleaned = partsDot[0] + ":" + partsDot[1] + "." + partsDot[2];
+  if (cleaned.includes(".") && !cleaned.includes(":")) {
+    const p = cleaned.split("."); cleaned = p[0] + ":" + p[1];
   }
+  const parts = cleaned.split(":");
+  if (parts.length !== 2) return Infinity;
+  const minutes = parseInt(parts[0], 10);
+  const seconds = parseFloat(parts[1]);
+  if (isNaN(minutes) || isNaN(seconds)) return Infinity;
+  return minutes * 60 + seconds;
+}
 
-  function medalForPlace(i) {
-    if (i === 0) return "🥇";
-    if (i === 1) return "🥈";
-    if (i === 2) return "🥉";
-    return i + 1;
-  }
+function medalForPlace(i) {
+  if (i === 0) return "🥇";
+  if (i === 1) return "🥈";
+  if (i === 2) return "🥉";
+  return i + 1;
+}
 
-  function addRoute() {
-    const name = document.getElementById("newRouteName").value.trim();
-    if (!name) return;
+// ---------------- ROUTES ----------------
+function addRoute() {
+  const name = document.getElementById("newRouteName").value.trim();
+  if (!name) return;
+  if (!data.routes[name]) { data.routes[name] = []; save(); render(); }
+  document.getElementById("newRouteName").value = "";
+}
 
-    if (!data.routes[name]) {
-      data.routes[name] = [];
-      save();
-      render();
-    }
+function openRoute(route) {
+  document.getElementById("home").style.display = "none";
+  const page = document.getElementById("routePage");
+  page.style.display = "block";
 
-    document.getElementById("newRouteName").value = "";
-  }
+  const sortedRuns = [...data.routes[route]].sort((a,b) => timeToSeconds(a.time) - timeToSeconds(b.time));
 
-  function openRoute(route) {
-    document.getElementById("home").style.display = "none";
-    const page = document.getElementById("routePage");
-    page.style.display = "block";
-
-    const sortedRuns = [...data.routes[route]].sort((a,b) => timeToSeconds(a.time) - timeToSeconds(b.time));
-
-    let rows = "";
-    sortedRuns.forEach((e, index) => {
-      const realIndex = data.routes[route].indexOf(e);
-      rows += `
-        <tr>
-          <td>${medalForPlace(index)}</td>
-          <td>${e.name}</td>
-          <td>${e.time}</td>
-          <td>${e.video ? `<a href=\"${e.video}\" target=\"_blank\">Video</a>` : "-"}</td>
-          <td><button class=\"trash\" onclick=\"deleteEntry('${route}', ${realIndex})\">🗑️</button></td>
-        </tr>
-      `;
-    });
-
-    page.innerHTML = `
-      <div class="route-container">
-        <div class="route-header">
-          <h2>${route}</h2>
-          <button class="back-btn" onclick="closeRoute()">← Tilbage</button>
-        </div>
-
-        <div class="form-row">
-          <input class="name-input" type="text" id="name" placeholder="Navn" />
-          <input class="time-input" type="text" id="time" placeholder="mm:ss" />
-          <input class="video-input" type="url" id="video" placeholder="Video link" />
-          <button onclick="addEntry('${route}')">+ Run</button>
-        </div>
-
-        <button onclick="deleteRoute('${route}')" style="background:#a00000">Slet rute</button>
-
-        <table>
-          <thead>
-            <tr><th>Plads</th><th>Navn</th><th>Tid</th><th>Video</th><th></th></tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>
+  let rows = "";
+  sortedRuns.forEach((e, index) => {
+    const realIndex = data.routes[route].indexOf(e);
+    rows += `
+      <tr>
+        <td>${medalForPlace(index)}</td>
+        <td>${e.name}</td>
+        <td>${e.time}</td>
+        <td>${e.video ? `<a href="${e.video}" target="_blank">Video</a>` : "-"}</td>
+        <td><button class="trash" onclick="deleteEntry('${route}', ${realIndex})">🗑️</button></td>
+      </tr>
     `;
-  }
+  });
 
-  function closeRoute() {
-    document.getElementById("routePage").style.display = "none";
-    document.getElementById("home").style.display = "block";
-  }
+  page.innerHTML = `
+    <div class="route-container">
+      <div class="route-header">
+        <h2>${route}</h2>
+        <button class="back-btn" onclick="closeRoute()">← Tilbage</button>
+      </div>
 
-  function addEntry(route) {
-    const name = document.getElementById("name").value;
-    const time = document.getElementById("time").value;
-    const video = document.getElementById("video").value;
+      <div class="form-row">
+        <input class="name-input" type="text" id="name" placeholder="Navn" />
+        <input class="time-input" type="text" id="time" placeholder="mm:ss" />
+        <input class="video-input" type="url" id="video" placeholder="Video link" />
+        <button onclick="addEntry('${route}')">+ Run</button>
+      </div>
 
-    if (!name || !time) return;
+      <button onclick="deleteRoute('${route}')" style="background:#a00000">Slet rute</button>
 
-    data.routes[route].push({ name, time, video });
-    save();
-    render();
-    openRoute(route);
-  }
+      <table>
+        <thead>
+          <tr><th>Plads</th><th>Navn</th><th>Tid</th><th>Video</th><th></th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
 
-  function deleteEntry(route, index) {
-    data.routes[route].splice(index, 1);
-    save();
-    render();
-    openRoute(route);
-  }
+function closeRoute() {
+  document.getElementById("routePage").style.display = "none";
+  document.getElementById("home").style.display = "block";
+}
 
-  function deleteRoute(route) {
-    if (!confirm(`Slet ruten \"${route}\"?`)) return;
-    delete data.routes[route];
-    save();
-    closeRoute();
-    render();
-  }
+function addEntry(route) {
+  const name = document.getElementById("name").value;
+  const time = document.getElementById("time").value;
+  const video = document.getElementById("video").value;
+  if (!name || !time) return;
+  data.routes[route].push({ name, time, video });
+  save(); render(); openRoute(route);
+}
 
-  function openLeaderboard() {
-    document.getElementById("home").style.display = "none";
-    const page = document.getElementById("leaderboardPage");
-    page.style.display = "block";
+function deleteEntry(route, index) {
+  data.routes[route].splice(index, 1);
+  save(); render(); openRoute(route);
+}
 
-    // Beregn statistik
-    const stats = {};
+function deleteRoute(route) {
+  if (!confirm(`Slet ruten "${route}"?`)) return;
+  delete data.routes[route]; save(); closeRoute(); render();
+}
 
-    for (const route of Object.keys(data.routes)) {
-      const sorted = [...data.routes[route]].sort((a,b) => timeToSeconds(a.time) - timeToSeconds(b.time));
+// ---------------- LEADERBOARD ----------------
+function openLeaderboard() {
+  document.getElementById("home").style.display = "none";
+  const page = document.getElementById("leaderboardPage");
+  page.style.display = "block";
 
-      sorted.forEach((run, index) => {
-        if (!stats[run.name]) {
-          stats[run.name] = { runs: 0, gold: 0, silver: 0, bronze: 0 };
-        }
+  const stats = {};
 
-        stats[run.name].runs++;
-
-        if (index === 0) stats[run.name].gold++;
-        if (index === 1) stats[run.name].silver++;
-        if (index === 2) stats[run.name].bronze++;
-      });
-    }
-
-    // Sorter lister
-    const mostRuns = Object.entries(stats).sort((a,b) => b[1].runs - a[1].runs);
-    const mostRecords = Object.entries(stats).sort((a,b) => (b[1].gold*3 + b[1].silver*2 + b[1].bronze) - (a[1].gold*3 + a[1].silver*2 + a[1].bronze));
-
-    let col1 = "";
-    mostRuns.forEach(([name, s], i) => {
-      col1 += `
-        <div class=\"lb-row\">
-          <span class=\"lb-rank\">${i+1}</span>
-          <span class=\"lb-name\">${name}</span>
-          <span class=\"lb-value\">${s.runs} runs</span>
-        </div>`;
+  for (const route of Object.keys(data.routes)) {
+    const sorted = [...data.routes[route]].sort((a,b) => timeToSeconds(a.time) - timeToSeconds(b.time));
+    sorted.forEach((run, index) => {
+      if (!stats[run.name]) stats[run.name] = { runs: 0, gold: 0, silver: 0, bronze: 0 };
+      stats[run.name].runs++;
+      if (index === 0) stats[run.name].gold++;
+      if (index === 1) stats[run.name].silver++;
+      if (index === 2) stats[run.name].bronze++;
     });
+  }
 
-    let col2 = "";
-    mostRecords.forEach(([name, s], i) => {
-      col2 += `
-        <div class=\"lb-row\">
-          <span class=\"lb-rank\">${i+1}</span>
-          <span class=\"lb-name\">${name}</span>
-          <span class=\"lb-value\">🥇${s.gold} 🥈${s.silver} 🥉${s.bronze}</span>
-        </div>`;
-    });
+  const mostRuns = Object.entries(stats).sort((a,b) => b[1].runs - a[1].runs);
+  const mostRecords = Object.entries(stats).sort((a,b) => (b[1].gold*3 + b[1].silver*2 + b[1].bronze) - (a[1].gold*3 + a[1].silver*2 + a[1].bronze));
 
-    page.innerHTML = `
-      <div class="route-container">
-        <div class="route-header">
-          <h2>LEADERBOARD</h2>
-          <button class="back-btn" onclick="closeLeaderboard()">← Tilbage</button>
+  let col1 = "";
+  mostRuns.forEach(([name, s], i) => {
+    col1 += `
+      <div class="lb-row">
+        <span class="lb-rank">${i+1}</span>
+        <span class="lb-name">${name}</span>
+        <span class="lb-value">${s.runs} runs</span>
+      </div>`;
+  });
+
+  let col2 = "";
+  mostRecords.forEach(([name, s], i) => {
+    col2 += `
+      <div class="lb-row">
+        <span class="lb-rank">${i+1}</span>
+        <span class="lb-name">${name}</span>
+        <span class="lb-value">🥇${s.gold} 🥈${s.silver} 🥉${s.bronze}</span>
+      </div>`;
+  });
+
+  page.innerHTML = `
+    <div class="route-container">
+      <div class="route-header">
+        <h2>LEADERBOARD</h2>
+        <button class="back-btn" onclick="closeLeaderboard()">← Tilbage</button>
+      </div>
+
+      <div class="leaderboard-grid">
+        <div class="lb-col">
+          <h3>🔥 Flest runs</h3>
+          ${col1 || "Ingen data endnu"}
         </div>
 
-        <div class="leaderboard-grid">
-          <div class="lb-col">
-            <h3>🔥 Flest runs</h3>
-            ${col1 || "Ingen data endnu"}
-          </div>
-
-          <div class="lb-col">
-            <h3>🏆 Flest rekorder</h3>
-            ${col2 || "Ingen data endnu"}
-          </div>
+        <div class="lb-col">
+          <h3>🏆 Flest rekorder</h3>
+          ${col2 || "Ingen data endnu"}
         </div>
       </div>
-    `;
-  }
+    </div>
+  `;
+}
 
-  function closeLeaderboard() {
-    document.getElementById("leaderboardPage").style.display = "none";
-    document.getElementById("home").style.display = "block";
-  }
+function closeLeaderboard() {
+  document.getElementById("leaderboardPage").style.display = "none";
+  document.getElementById("home").style.display = "block";
+}
 
-  function render() {
-    const container = document.getElementById("routes");
-    container.innerHTML = "";
+// ---------------- GAMES / SNAKE ----------------
+let snakeInterval = null;
+let snakeKeyHandler = null;
 
-    for (const route of Object.keys(data.routes)) {
-      const sorted = [...data.routes[route]].sort((a,b) => timeToSeconds(a.time) - timeToSeconds(b.time));
-      const top3 = sorted.slice(0,3);
+function openGames() {
+  document.getElementById("home").style.display = "none";
+  const page = document.getElementById("gamesPage");
+  page.style.display = "block";
 
-      let list = "";
-      top3.forEach((e, i) => {
-        list += `<div><span class=\"medal\">${medalForPlace(i)}</span> ${e.name} – ${e.time}</div>`;
-      });
-
-      const card = document.createElement("div");
-      card.className = "route-card";
-      card.innerHTML = `<h3>${route}</h3>${list || "Ingen tider endnu"}`;
-      card.onclick = () => openRoute(route);
-
-      container.appendChild(card);
-    }
-  }
-
-  render();
-  function openGames() {
-    document.getElementById("home").style.display = "none";
-    const page = document.getElementById("gamesPage");
-    page.style.display = "block";
-
-    page.innerHTML = `
-      <div class="route-container">
-        <div class="route-header">
-          <h2>GAMES – SNAKE</h2>
-          <button class="back-btn" onclick="closeGames()">← Tilbage</button>
-        </div>
-
-        <p style="text-align:center;">Brug WASD eller piletaster</p>
-
-        <div class="game-box">
-          <canvas id="snake" width="300" height="300"></canvas>
-        </div>
+  page.innerHTML = `
+    <div class="route-container">
+      <div class="route-header">
+        <h2>SNAKE</h2>
+        <button class="back-btn" onclick="closeGames()">← Tilbage</button>
       </div>
-    `;
 
-    startSnake();
-  }
+      <p style="text-align:center;">Brug WASD eller piletaster – Tryk SPACE for at starte</p>
 
-  function closeGames() {
-    document.getElementById("gamesPage").style.display = "none";
-    document.getElementById("home").style.display = "block";
-  }
+      <div class="game-box">
+        <canvas id="snake" width="300" height="300"></canvas>
+      </div>
+    </div>
+  `;
 
-  // --- SNAKE GAME ---
-  function startSnake() {
-    const canvas = document.getElementById("snake");
-    const ctx = canvas.getContext("2d");
+  startSnake();
+}
 
-    const box = 15;
-    let snake = [{ x: 9 * box, y: 9 * box }];
-    let direction = "RIGHT";
-    let nextDirection = "RIGHT";
-    let running = false;
+function closeGames() {
+  if (snakeInterval) clearInterval(snakeInterval);
+  if (snakeKeyHandler) document.removeEventListener("keydown", snakeKeyHandler);
+  document.getElementById("gamesPage").style.display = "none";
+  document.getElementById("home").style.display = "block";
+}
 
-    let food = {
-      x: Math.floor(Math.random() * 19) * box,
-      y: Math.floor(Math.random() * 19) * box
-    };
+function startSnake() {
+  const canvas = document.getElementById("snake");
+  const ctx = canvas.getContext("2d");
+  const box = 15;
 
-    document.onkeydown = e => {
-      // START / RESTART MED SPACE
-      if (e.code === "Space") {
-        if (!running) {
-          running = true;
-        }
-        return;
-      }
+  let snake = [{ x: 9 * box, y: 9 * box }];
+  let direction = "RIGHT";
+  let nextDirection = "RIGHT";
+  let running = false;
 
-      // Retning (forhindrer 180° vendinger)
-      if ((e.key === "ArrowUp" || e.key === "w") && direction !== "DOWN") nextDirection = "UP";
-      if ((e.key === "ArrowDown" || e.key === "s") && direction !== "UP") nextDirection = "DOWN";
-      if ((e.key === "ArrowLeft" || e.key === "a") && direction !== "RIGHT") nextDirection = "LEFT";
-      if ((e.key === "ArrowRight" || e.key === "d") && direction !== "LEFT") nextDirection = "RIGHT";
-    };
+  let food = { x: 5 * box, y: 5 * box };
 
-    function resetGame() {
+  snakeKeyHandler = e => {
+    if (e.code === "Space") { running = true; return; }
+
+    if ((e.key === "ArrowUp" || e.key === "w") && direction !== "DOWN") nextDirection = "UP";
+    if ((e.key === "ArrowDown" || e.key === "s") && direction !== "UP") nextDirection = "DOWN";
+    if ((e.key === "ArrowLeft" || e.key === "a") && direction !== "RIGHT") nextDirection = "LEFT";
+    if ((e.key === "ArrowRight" || e.key === "d") && direction !== "LEFT") nextDirection = "RIGHT";
+  };
+
+  document.addEventListener("keydown", snakeKeyHandler);
+
+  function draw() {
+    ctx.clearRect(0, 0, 300, 300);
+
+    if (!running) {
+      ctx.fillStyle = "#ffb300";
+      ctx.font = "16px Orbitron";
+      ctx.textAlign = "center";
+      ctx.fillText("Tryk SPACE for at starte", 150, 150);
+      return;
+    }
+
+    direction = nextDirection;
+
+    for (let part of snake) {
+      ctx.fillStyle = "#ffb300";
+      ctx.fillRect(part.x, part.y, box, box);
+    }
+
+    ctx.fillStyle = "red";
+    ctx.fillRect(food.x, food.y, box, box);
+
+    let head = { x: snake[0].x, y: snake[0].y };
+
+    if (direction === "UP") head.y -= box;
+    if (direction === "DOWN") head.y += box;
+    if (direction === "LEFT") head.x -= box;
+    if (direction === "RIGHT") head.x += box;
+
+    if (
+      head.x < 0 || head.y < 0 ||
+      head.x >= 300 || head.y >= 300 ||
+      snake.some(p => p.x === head.x && p.y === head.y)
+    ) {
       snake = [{ x: 9 * box, y: 9 * box }];
+      running = false;
       direction = "RIGHT";
       nextDirection = "RIGHT";
-      running = false;
+      return;
     }
 
-    function draw() {
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Vis "Tryk SPACE" tekst når spillet ikke kører
-      if (!running) {
-        ctx.fillStyle = "#ffb300";
-        ctx.font = "16px Orbitron";
-        ctx.textAlign = "center";
-        ctx.fillText("Tryk SPACE for at starte", canvas.width / 2, canvas.height / 2);
-        return;
-      }
-
-      direction = nextDirection;
-
-      for (let part of snake) {
-        ctx.fillStyle = "#ffb300";
-        ctx.fillRect(part.x, part.y, box, box);
-      }
-
-      ctx.fillStyle = "red";
-      ctx.fillRect(food.x, food.y, box, box);
-
-      let head = { x: snake[0].x, y: snake[0].y };
-
-      if (direction === "UP") head.y -= box;
-      if (direction === "DOWN") head.y += box;
-      if (direction === "LEFT") head.x -= box;
-      if (direction === "RIGHT") head.x += box;
-
-      // Kollision med væg – kun når man faktisk rammer
-      if (
-        head.x < 0 || head.y < 0 ||
-        head.x >= canvas.width || head.y >= canvas.height ||
-        snake.some(p => p.x === head.x && p.y === head.y)
-      ) {
-        resetGame();
-        return;
-      }
-
-      if (head.x === food.x && head.y === food.y) {
-        food = {
-          x: Math.floor(Math.random() * 19) * box,
-          y: Math.floor(Math.random() * 19) * box
-        };
-      } else {
-        snake.pop();
-      }
-
-      snake.unshift(head);
+    if (head.x === food.x && head.y === food.y) {
+      food = { x: Math.floor(Math.random() * 19) * box, y: Math.floor(Math.random() * 19) * box };
+    } else {
+      snake.pop();
     }
 
-    if (window.snakeInterval) clearInterval(window.snakeInterval);
-    window.snakeInterval = setInterval(draw, 120);
-  }
-  }
-  // ---------- GAMES / SNAKE ----------
-  function openGames() {
-    document.getElementById("home").style.display = "none";
-    const page = document.getElementById("gamesPage");
-    page.style.display = "block";
-
-    page.innerHTML = `
-      <div class=\"route-container\">
-        <div class=\"route-header\">
-          <h2>GAMES – SNAKE</h2>
-          <button class=\"back-btn\" onclick=\"closeGames()\">← Tilbage</button>
-        </div>
-
-        <p style=\"text-align:center;\">Brug WASD eller piletaster</p>
-
-        <div class=\"game-box\">
-          <canvas id=\"snake\" width=\"300\" height=\"300\"></canvas>
-        </div>
-      </div>
-    `;
-
-    startSnake();
+    snake.unshift(head);
   }
 
-  function closeGames() {
-    document.getElementById("gamesPage").style.display = "none";
-    document.getElementById("home").style.display = "block";
+  if (snakeInterval) clearInterval(snakeInterval);
+  snakeInterval = setInterval(draw, 120);
+}
+
+// ---------------- RENDER HOME ----------------
+function render() {
+  const container = document.getElementById("routes");
+  container.innerHTML = "";
+
+  for (const route of Object.keys(data.routes)) {
+    const sorted = [...data.routes[route]].sort((a,b) => timeToSeconds(a.time) - timeToSeconds(b.time));
+    const top3 = sorted.slice(0,3);
+
+    let list = "";
+    top3.forEach((e, i) => {
+      list += `<div><span class="medal">${medalForPlace(i)}</span> ${e.name} – ${e.time}</div>`;
+    });
+
+    const card = document.createElement("div");
+    card.className = "route-card";
+    card.innerHTML = `<h3>${route}</h3>${list || "Ingen tider endnu"}`;
+    card.onclick = () => openRoute(route);
+
+    container.appendChild(card);
   }
+}
 
-  function startSnake() {
-    const canvas = document.getElementById("snake");
-    const ctx = canvas.getContext("2d");
-
-    const box = 15;
-    let snake = [{ x: 9 * box, y: 9 * box }];
-    let direction = "RIGHT";
-
-    let food = {
-      x: Math.floor(Math.random() * 19) * box,
-      y: Math.floor(Math.random() * 19) * box
-    };
-
-    document.onkeydown = e => {
-      if (e.key === "ArrowUp" || e.key === "w") direction = "UP";
-      if (e.key === "ArrowDown" || e.key === "s") direction = "DOWN";
-      if (e.key === "ArrowLeft" || e.key === "a") direction = "LEFT";
-      if (e.key === "ArrowRight" || e.key === "d") direction = "RIGHT";
-    };
-
-    function draw() {
-      ctx.fillStyle = "black";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      for (let part of snake) {
-        ctx.fillStyle = "#ffb300";
-        ctx.fillRect(part.x, part.y, box, box);
-      }
-
-      ctx.fillStyle = "red";
-      ctx.fillRect(food.x, food.y, box, box);
-
-      let head = { x: snake[0].x, y: snake[0].y };
-
-      if (direction === "UP") head.y -= box;
-      if (direction === "DOWN") head.y += box;
-      if (direction === "LEFT") head.x -= box;
-      if (direction === "RIGHT") head.x += box;
-
-      if (head.x === food.x && head.y === food.y) {
-        food = {
-          x: Math.floor(Math.random() * 19) * box,
-          y: Math.floor(Math.random() * 19) * box
-        };
-      } else {
-        snake.pop();
-      }
-
-      if (
-        head.x < 0 || head.y < 0 ||
-        head.x >= canvas.width || head.y >= canvas.height ||
-        snake.some(p => p.x === head.x && p.y === head.y)
-      ) {
-        
-        snake = [{ x: 9 * box, y: 9 * box }];
-        direction = "RIGHT";
-        return;
-      }
-
-      snake.unshift(head);
-    }
-
-    if (window.snakeInterval) clearInterval(window.snakeInterval);
-    window.snakeInterval = setInterval(draw, 120);
-  }
+render();
 </script>
 
 </body>
