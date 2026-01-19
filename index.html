@@ -6,120 +6,166 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f5f5f5;
+      background: #000;
+      color: #fff;
       padding: 20px;
-      max-width: 800px;
-      margin: auto;
     }
+
     h1 {
       text-align: center;
     }
-    form {
-      background: white;
+
+    .add-route {
+      max-width: 400px;
+      margin: 20px auto;
+      background: #111;
       padding: 15px;
       border-radius: 8px;
-      margin-bottom: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    input, select, button {
+
+    .routes {
+      display: flex;
+      gap: 20px;
+      overflow-x: auto;
+      padding-top: 20px;
+    }
+
+    .route-column {
+      background: #111;
+      padding: 15px;
+      border-radius: 8px;
+      min-width: 280px;
+    }
+
+    .route-column h2 {
+      text-align: center;
+    }
+
+    input, button {
       width: 100%;
       padding: 8px;
-      margin: 6px 0;
+      margin: 5px 0;
+      border: none;
+      border-radius: 4px;
     }
+
+    button {
+      background: #444;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #666;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      background: white;
+      margin-top: 10px;
+      font-size: 14px;
     }
+
     th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
+      border: 1px solid #333;
+      padding: 6px;
       text-align: center;
     }
+
     th {
-      background: #eee;
+      background: #222;
     }
-    a {
-      color: blue;
-    }
+
+    a { color: #4da6ff; }
   </style>
 </head>
 <body>
 
-  <h1>🏁 Rute Konkurrence</h1>
+<h1>🏁 Rute Konkurrence</h1>
 
-  <form id="timeForm">
-    <label>Navn:</label>
-    <input type="text" id="name" required />
+<div class="add-route">
+  <h3>Tilføj ny rute</h3>
+  <input type="text" id="newRouteName" placeholder="Navn på rute" />
+  <button onclick="addRoute()">Tilføj rute</button>
+</div>
 
-    <label>Rute:</label>
-    <select id="route">
-      <option value="Skoven Rundt">Skoven Rundt</option>
-      <option value="By Sprint">By Sprint</option>
-      <option value="Lang Tur">Lang Tur</option>
-    </select>
+<div class="routes" id="routes"></div>
 
-    <label>Tid (fx 12:34):</label>
-    <input type="text" id="time" placeholder="mm:ss" required />
+<script>
+  let data = JSON.parse(localStorage.getItem("ruteData")) || { routes: {} };
 
-    <label>Video link (YouTube, TikTok osv.):</label>
-    <input type="url" id="video" placeholder="https://..." />
+  function save() {
+    localStorage.setItem("ruteData", JSON.stringify(data));
+  }
 
-    <button type="submit">Gem tid</button>
-  </form>
+  function addRoute() {
+    const name = document.getElementById("newRouteName").value.trim();
+    if (!name) return;
 
-  <h2>Resultater</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Navn</th>
-        <th>Rute</th>
-        <th>Tid</th>
-        <th>Video</th>
-      </tr>
-    </thead>
-    <tbody id="results"></tbody>
-  </table>
-
-  <script>
-    const form = document.getElementById("timeForm");
-    const resultsTable = document.getElementById("results");
-
-    let data = JSON.parse(localStorage.getItem("ruteData")) || [];
-
-    function render() {
-      resultsTable.innerHTML = "";
-      data.forEach(entry => {
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-          <td>${entry.name}</td>
-          <td>${entry.route}</td>
-          <td>${entry.time}</td>
-          <td>${entry.video ? `<a href="${entry.video}" target="_blank">Se video</a>` : "-"}</td>
-        `;
-
-        resultsTable.appendChild(row);
-      });
+    if (!data.routes[name]) {
+      data.routes[name] = [];
+      save();
+      render();
     }
 
-    form.addEventListener("submit", function(e) {
-      e.preventDefault();
+    document.getElementById("newRouteName").value = "";
+  }
 
-      const name = document.getElementById("name").value;
-      const route = document.getElementById("route").value;
-      const time = document.getElementById("time").value;
-      const video = document.getElementById("video").value;
+  function addEntry(route) {
+    const name = document.getElementById(`name-${route}`).value;
+    const time = document.getElementById(`time-${route}`).value;
+    const video = document.getElementById(`video-${route}`).value;
 
-      data.push({ name, route, time, video });
-      localStorage.setItem("ruteData", JSON.stringify(data));
+    if (!name || !time) return;
 
-      form.reset();
-      render();
-    });
-
+    data.routes[route].push({ name, time, video });
+    save();
     render();
-  </script>
+  }
+
+  function render() {
+    const container = document.getElementById("routes");
+    container.innerHTML = "";
+
+    for (const route in data.routes) {
+      const column = document.createElement("div");
+      column.className = "route-column";
+
+      let rows = "";
+      data.routes[route].forEach(e => {
+        rows += `
+          <tr>
+            <td>${e.name}</td>
+            <td>${e.time}</td>
+            <td>${e.video ? `<a href="${e.video}" target="_blank">Video</a>` : "-"}</td>
+          </tr>
+        `;
+      });
+
+      column.innerHTML = `
+        <h2>${route}</h2>
+
+        <input type="text" id="name-${route}" placeholder="Navn" />
+        <input type="text" id="time-${route}" placeholder="Tid (mm:ss)" />
+        <input type="url" id="video-${route}" placeholder="Video link" />
+        <button onclick="addEntry('${route}')">Tilføj tid</button>
+
+        <table>
+          <thead>
+            <tr><th>Navn</th><th>Tid</th><th>Video</th></tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      `;
+
+      container.appendChild(column);
+    }
+  }
+
+  render();
+</script>
 
 </body>
 </html>
