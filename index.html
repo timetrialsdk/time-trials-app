@@ -92,6 +92,7 @@
     }
 
     .name-input { width: 120px; }
+    .car-input { width: 120px; }
     .time-input { width: 90px; }
     .video-input { flex: 1; }
 
@@ -224,6 +225,7 @@ function openRoute(route) {
       <tr>
         <td>${medalForPlace(index)}</td>
         <td>${e.name}</td>
+          <td>${e.car || "-"}</td>
         <td>${e.time}</td>
         <td>${e.video ? `<a href="${e.video}" target="_blank">Video</a>` : "-"}</td>
         <td><button class="trash" onclick="deleteEntry('${route}', ${realIndex})">🗑️</button></td>
@@ -240,6 +242,7 @@ function openRoute(route) {
 
       <div class="form-row">
         <input class="name-input" type="text" id="name" placeholder="Navn" />
+        <input class="car-input" type="text" id="car" placeholder="Bil" />
         <input class="time-input" type="text" id="time" placeholder="mm:ss" />
         <input class="video-input" type="url" id="video" placeholder="Video link" />
         <button onclick="addEntry('${route}')">+ Run</button>
@@ -249,7 +252,7 @@ function openRoute(route) {
 
       <table>
         <thead>
-          <tr><th>Plads</th><th>Navn</th><th>Tid</th><th>Video</th><th></th></tr>
+          <tr><th>Plads</th><th>Navn</th><th>Bil</th><th>Tid</th><th>Video</th><th></th></tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
@@ -264,10 +267,11 @@ function closeRoute() {
 
 function addEntry(route) {
   const name = document.getElementById("name").value;
+    const car = document.getElementById("car").value;
   const time = document.getElementById("time").value;
   const video = document.getElementById("video").value;
   if (!name || !time) return;
-  data.routes[route].push({ name, time, video });
+  data.routes[route].push({ name, time, video, car });
   save(); render(); openRoute(route);
 }
 
@@ -471,7 +475,7 @@ function render() {
 
     let list = "";
     top3.forEach((e, i) => {
-      list += `<div><span class="medal">${medalForPlace(i)}</span> ${e.name} – ${e.time}</div>`;
+      list += `<div><span class="medal">${medalForPlace(i)}</span> ${e.name} (${e.car || "-"}) – ${e.time}</div>`;
     });
 
     const card = document.createElement("div");
