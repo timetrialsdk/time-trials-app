@@ -19,26 +19,32 @@
       background: #111;
       padding: 15px;
       border-radius: 8px;
+      text-align: center;
     }
 
     .routes {
       display: flex;
       gap: 20px;
-      overflow-x: auto;
+      flex-wrap: wrap;
+      justify-content: center;
       padding-top: 20px;
     }
 
-    .route-column {
+    .route-card {
       background: #111;
       padding: 15px;
       border-radius: 8px;
-      min-width: 300px;
+      width: 250px;
+      cursor: pointer;
     }
 
-    .route-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .route-card:hover { background: #1a1a1a; }
+
+    .editor {
+      margin-top: 30px;
+      background: #111;
+      padding: 20px;
+      border-radius: 8px;
     }
 
     input, button {
@@ -49,20 +55,8 @@
       border-radius: 4px;
     }
 
-    button {
-      background: #444;
-      color: white;
-      cursor: pointer;
-    }
-
+    button { background: #444; color: white; cursor: pointer; }
     button:hover { background: #666; }
-
-    .delete-btn {
-      background: #a00000;
-      margin-top: 5px;
-    }
-
-    .delete-btn:hover { background: #d00000; }
 
     table {
       width: 100%;
@@ -80,6 +74,14 @@
     th { background: #222; }
 
     a { color: #4da6ff; }
+
+    .trash {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: red;
+      font-size: 16px;
+    }
   </style>
 </head>
 <body>
@@ -92,7 +94,10 @@
   <button onclick="addRoute()">Tilføj rute</button>
 </div>
 
+<h2>Forside – Top 3 tider</h2>
 <div class="routes" id="routes"></div>
+
+<div class="editor" id="editor" style="display:none"></div>
 
 <script>
   let data = JSON.parse(localStorage.getItem("ruteData"));
@@ -100,6 +105,11 @@
 
   function save() {
     localStorage.setItem("ruteData", JSON.stringify(data));
+  }
+
+  function timeToSeconds(t) {
+    const [m, s] = t.split(":").map(Number);
+    return m * 60 + s;
   }
 
   function addRoute() {
@@ -115,29 +125,65 @@
     document.getElementById("newRouteName").value = "";
   }
 
-  function deleteRoute(route) {
-    if (!confirm(`Slet ruten "${route}" og alle tider?`)) return;
-    delete data.routes[route];
-    save();
-    render();
+  function openRoute(route) {
+    const editor = document.getElementById("editor");
+    editor.style.display = "block";
+
+    let rows = "";
+    data.routes[route].forEach((e, index) => {
+      rows += `
+        <tr>
+          <td>${e.name}</td>
+          <td>${e.time}</td>
+          <td>${e.video ? `<a href="${e.video}" target="_blank">Video</a>` : "-"}</td>
+          <td><button class="trash" onclick="deleteEntry('${route}', ${index})">🗑️</button></td>
+        </tr>
+      `;
+    });
+
+    editor.innerHTML = `
+      <h2>${route}</h2>
+
+      <input type="text" id="name" placeholder="Navn" />
+      <input type="text" id="time" placeholder="Tid (mm:ss)" />
+      <input type="url" id="video" placeholder="Video link" />
+      <button onclick="addEntry('${route}')">Tilføj run</button>
+      <button onclick="deleteRoute('${route}')" style="background:#a00000">Slet rute</button>
+
+      <table>
+        <thead>
+          <tr><th>Navn</th><th>Tid</th><th>Video</th><th></th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
   }
 
   function addEntry(route) {
-    const name = document.getElementById(`name-${route}`).value;
-    const time = document.getElementById(`time-${route}`).value;
-    const video = document.getElementById(`video-${route}`).value;
+    const name = document.getElementById("name").value;
+    const time = document.getElementById("time").value;
+    const video = document.getElementById("video").value;
 
     if (!name || !time) return;
 
     data.routes[route].push({ name, time, video });
     save();
     render();
+    openRoute(route);
   }
 
   function deleteEntry(route, index) {
-    if (!confirm("Slet denne tid?")) return;
     data.routes[route].splice(index, 1);
     save();
+    render();
+    openRoute(route);
+  }
+
+  function deleteRoute(route) {
+    if (!confirm(`Slet ruten "${route}"?`)) return;
+    delete data.routes[route];
+    save();
+    document.getElementById("editor").style.display = "none";
     render();
   }
 
@@ -146,43 +192,20 @@
     container.innerHTML = "";
 
     for (const route in data.routes) {
-      const column = document.createElement("div");
-      column.className = "route-column";
+      const sorted = [...data.routes[route]].sort((a,b) => timeToSeconds(a.time) - timeToSeconds(b.time));
+      const top3 = sorted.slice(0,3);
 
-      let rows = "";
-      data.routes[route].forEach((e, index) => {
-        rows += `
-          <tr>
-            <td>${e.name}</td>
-            <td>${e.time}</td>
-            <td>${e.video ? `<a href="${e.video}" target="_blank">Video</a>` : "-"}</td>
-            <td><button class="delete-btn" onclick="deleteEntry('${route}', ${index})">✖</button></td>
-          </tr>
-        `;
+      let list = "";
+      top3.forEach(e => {
+        list += `<div>${e.name} – ${e.time}</div>`;
       });
 
-      column.innerHTML = `
-        <div class="route-header">
-          <h2>${route}</h2>
-          <button class="delete-btn" onclick="deleteRoute('${route}')">Slet rute</button>
-        </div>
+      const card = document.createElement("div");
+      card.className = "route-card";
+      card.innerHTML = `<h3>${route}</h3>${list || "Ingen tider endnu"}`;
+      card.onclick = () => openRoute(route);
 
-        <input type="text" id="name-${route}" placeholder="Navn" />
-        <input type="text" id="time-${route}" placeholder="Tid (mm:ss)" />
-        <input type="url" id="video-${route}" placeholder="Video link" />
-        <button onclick="addEntry('${route}')">Tilføj tid</button>
-
-        <table>
-          <thead>
-            <tr><th>Navn</th><th>Tid</th><th>Video</th><th></th></tr>
-          </thead>
-          <tbody>
-            ${rows}
-          </tbody>
-        </table>
-      `;
-
-      container.appendChild(column);
+      container.appendChild(card);
     }
   }
 
