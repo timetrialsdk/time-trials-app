@@ -90,6 +90,7 @@ button:hover {
 }
 
 .lb-grid { display:grid; grid-template-columns:1fr 1fr; gap:40px; }
+
 .lb-row {
   display: grid;
   grid-template-columns: 40px 1fr auto;
@@ -100,6 +101,13 @@ button:hover {
   border: 1px solid #333;
   border-radius: 6px;
 }
+
+table { width:100%; border-collapse:collapse; margin-top:15px; }
+th,td { border:1px solid #333; padding:6px; text-align:center; }
+th { background:#222; }
+a { color:#ffb300; }
+
+.trash { background:none; border:none; color:red; cursor:pointer; font-size:16px; }
 </style>
 </head>
 
@@ -195,7 +203,15 @@ function openRoute(route) {
 
   let rows="";
   sorted.forEach((e,i)=>{
-    rows+=`<tr><td>${i+1}</td><td>${e.name}</td><td>${e.time}</td></tr>`;
+    rows+=`
+      <tr>
+        <td>${i+1}</td>
+        <td>${e.name}</td>
+        <td>${e.car || "-"}</td>
+        <td>${e.time}</td>
+        <td>${e.video ? `<a href="${e.video}" target="_blank">Video</a>` : "-"}</td>
+        <td><button class="trash" onclick="deleteEntry('${route}', ${i})">🗑️</button></td>
+      </tr>`;
   });
 
   routePage.innerHTML = `
@@ -204,11 +220,13 @@ function openRoute(route) {
       <h2>${route}</h2>
 
       <input id="name" placeholder="Navn">
+      <input id="car" placeholder="Bil">
       <input id="time" placeholder="mm:ss">
+      <input id="video" placeholder="Video link">
       <button onclick="addEntry('${route}')">+ Run</button>
 
       <table>
-        <tr><th>#</th><th>Navn</th><th>Tid</th></tr>
+        <tr><th>#</th><th>Navn</th><th>Bil</th><th>Tid</th><th>Video</th><th></th></tr>
         ${rows}
       </table>
     </div>
@@ -222,11 +240,20 @@ function closeRoute(){
 
 async function addEntry(route){
   const name = document.getElementById("name").value;
+  const car = document.getElementById("car").value;
   const time = document.getElementById("time").value;
+  const video = document.getElementById("video").value;
   if(!name||!time)return;
 
   const runs = data.routes[route];
-  runs.push({name,time});
+  runs.push({name,time,car,video});
+  await db.collection("routes").doc(route).set({runs});
+  openRoute(route);
+}
+
+async function deleteEntry(route,index){
+  const runs=data.routes[route];
+  runs.splice(index,1);
   await db.collection("routes").doc(route).set({runs});
   openRoute(route);
 }
