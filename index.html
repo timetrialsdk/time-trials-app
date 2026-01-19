@@ -11,87 +11,40 @@
 
 <style>
 body { font-family:'Orbitron',sans-serif; background:#000; color:#ffb300; overflow-x:hidden; }
-
-body::before{
-  content:"";
-  position:fixed;
-  inset:-100% -100% -100% -100%;
-  background:repeating-linear-gradient(135deg,
-    rgba(255,150,0,0.32) 0px,
-    rgba(255,150,0,0.32) 16px,
-    transparent 16px,
-    transparent 320px);
-  pointer-events:none;
-  z-index:1;
-}
-
-.flag{
-  position:fixed;
-  width:180px;height:130px;
-  background-size:36px 36px;
-  background-image:
-    linear-gradient(45deg,#000 25%,transparent 25%),
-    linear-gradient(-45deg,#000 25%,transparent 25%),
-    linear-gradient(45deg,transparent 75%,#000 75%),
-    linear-gradient(-45deg,transparent 75%,#000 75%);
-  background-position:0 0,0 18px,18px -18px,-18px 0px;
-  background-color:#fff;
-  z-index:1;
-}
-.flag-left{top:140px;left:40px;transform:rotate(-18deg);}
-.flag-right{bottom:40px;right:40px;transform:rotate(12deg);}
-
-#home,.route-page{position:relative;z-index:2;}
-
-button{
-  padding:8px 14px;
-  background:#111;
-  color:#ffb300;
-  border:1px solid #ffb300;
-  border-radius:6px;
-  cursor:pointer;
-  transition:.15s;
-}
+button{padding:8px 14px;background:#111;color:#ffb300;border:1px solid #ffb300;border-radius:6px;cursor:pointer;}
 button:hover{transform:scale(1.08);box-shadow:0 0 12px rgba(255,180,0,.7);}
 
-.menu-box{
-  max-width:420px;margin:20px auto;background:#111;padding:20px;border-radius:12px;
-  box-shadow:0 0 25px rgba(0,0,0,.7);text-align:center;
-}
-
-.route-card{
-  background:#111;padding:15px;border-radius:8px;width:260px;cursor:pointer;
-  box-shadow:0 0 15px rgba(0,0,0,.6);
-}
-
-.route-page{position:fixed;inset:0;display:none;padding:30px;z-index:1000;}
-
-.route-container{
-  max-width:900px;margin:auto;background:#111;padding:25px;border-radius:12px;
-  box-shadow:0 0 30px rgba(0,0,0,.7);
-}
-
+.menu-box{max-width:420px;margin:20px auto;background:#111;padding:20px;border-radius:12px;text-align:center;}
+.route-card{background:#111;padding:15px;border-radius:8px;width:260px;cursor:pointer;}
+.route-page{position:fixed;inset:0;display:none;padding:30px;z-index:1000;background:#000;}
+.route-container{max-width:900px;margin:auto;background:#111;padding:25px;border-radius:12px;}
 table{width:100%;border-collapse:collapse;margin-top:15px;}
 th,td{border:1px solid #333;padding:6px;text-align:center;}
-th{background:#222;}
-a{color:#ffb300;}
+.trash{background:none;border:none;color:red;font-size:18px;cursor:pointer;}
 
-.trash{background:none;border:none;color:red;cursor:pointer;font-size:18px;}
+.popup{
+  position:fixed;inset:0;display:none;background:rgba(0,0,0,.8);z-index:2000;
+  align-items:center;justify-content:center;
+}
+.popup-box{
+  background:#111;padding:20px;border-radius:12px;max-width:500px;width:100%;
+}
+#snakeCanvas{background:#000;border:2px solid #ffb300;}
 </style>
 </head>
 
 <body>
 
-<div class="flag flag-left"></div>
-<div class="flag flag-right"></div>
-
 <div id="home">
   <h1 style="text-align:center;font-size:60px;">TIME TRIALS</h1>
-  <div style="text-align:center;font-size:20px;">hvis ikke du ryster, var det ikke hurtigt nok</div>
 
   <div class="menu-box">
     <input id="newRouteName" placeholder="Navn på rute">
-    <button onclick="addRoute()">Tilføj rute</button>
+    <button onclick="addRoute()">Tilføj rute</button><br><br>
+
+    <!-- KNAPPERNE ER TILBAGE HER 🔥 -->
+    <button onclick="openLeaderboard()">🏆 Leaderboard</button>
+    <button onclick="openGames()">🎮 Games</button>
   </div>
 
   <h2 style="text-align:center;color:red;">RUNS</h2>
@@ -100,15 +53,31 @@ a{color:#ffb300;}
 
 <div class="route-page" id="routePage"></div>
 
+<!-- LEADERBOARD POPUP -->
+<div class="popup" id="leaderboardPopup">
+  <div class="popup-box">
+    <button onclick="closeLeaderboard()">← Tilbage</button>
+    <h2>🏆 Leaderboard</h2>
+    <table id="leaderboardTable"></table>
+  </div>
+</div>
+
+<!-- GAMES POPUP -->
+<div class="popup" id="gamesPopup">
+  <div class="popup-box" style="text-align:center;">
+    <button onclick="closeGames()">← Tilbage</button>
+    <h2>🎮 Snake</h2>
+    <p>Tryk SPACE for at starte / pause</p>
+    <canvas id="snakeCanvas" width="300" height="300"></canvas>
+  </div>
+</div>
+
 <script>
 // ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
   authDomain: "time-trials-b519e.firebaseapp.com",
   projectId: "time-trials-b519e",
-  storageBucket: "time-trials-b519e.firebasestorage.app",
-  messagingSenderId: "491396428595",
-  appId: "1:491396428595:web:627bc61e5cd1b9475fc446"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -117,18 +86,13 @@ const db = firebase.firestore();
 let data={routes:{}};
 let currentRoute=null;
 
-// LIVE OPDATERING FRA FIREBASE
 db.collection("routes").onSnapshot(snapshot=>{
   data.routes={};
   snapshot.forEach(doc=>{
     data.routes[doc.id]=doc.data().runs||[];
   });
-
   render();
-
-  if(currentRoute){
-    openRoute(currentRoute);
-  }
+  if(currentRoute) openRoute(currentRoute);
 });
 
 // ================= HJÆLP =================
@@ -137,7 +101,7 @@ function timeToSeconds(t){
   const p=t.split(":");
   return parseInt(p[0])*60+parseFloat(p[1]);
 }
-function medal(i){return ["🥇","🥈","🥉"][i]||i+1;}
+function medal(i){return ["🥇","🥈","🥉"][i];}
 
 // ================= ROUTES =================
 async function addRoute(){
@@ -168,10 +132,8 @@ function render(){
 
 function openRoute(route){
   currentRoute=route;
-
   home.style.display="none";
-  const page=routePage;
-  page.style.display="block";
+  routePage.style.display="block";
 
   const runs=[...data.routes[route]].sort((a,b)=>timeToSeconds(a.time)-timeToSeconds(b.time));
 
@@ -183,25 +145,22 @@ function openRoute(route){
         <td>${e.name}</td>
         <td>${e.car||"-"}</td>
         <td>${e.time}</td>
-        <td>${e.video?`<a href="${e.video}" target="_blank">Video</a>`:"-"}</td>
         <td><button class="trash" onclick="deleteEntry('${route}',${e.id})">🗑️</button></td>
       </tr>`;
   });
 
-  page.innerHTML=`
+  routePage.innerHTML=`
     <div class="route-container">
       <button onclick="closeRoute()">← Tilbage</button>
-      <button class="trash" onclick="deleteRoute('${route}')">🗑️</button>
       <h2>${route}</h2>
 
       <input id="name" placeholder="Navn">
       <input id="car" placeholder="Bil">
       <input id="time" placeholder="mm:ss">
-      <input id="video" placeholder="Video link">
       <button onclick="addEntry('${route}')">+ Run</button>
 
       <table>
-        <tr><th>#</th><th>Navn</th><th>Bil</th><th>Tid</th><th>Video</th><th></th></tr>
+        <tr><th>#</th><th>Navn</th><th>Bil</th><th>Tid</th><th></th></tr>
         ${rows}
       </table>
     </div>`;
@@ -215,56 +174,40 @@ function closeRoute(){
 
 // ================= RUNS =================
 async function addEntry(route){
-  const name  = document.getElementById("name").value.trim();
-  const car   = document.getElementById("car").value.trim();
-  const time  = document.getElementById("time").value.trim();
-  const video = document.getElementById("video").value.trim();
+  const name=document.getElementById("name").value.trim();
+  const car=document.getElementById("car").value.trim();
+  const time=document.getElementById("time").value.trim();
+  if(!name||!time)return;
 
-  if(!name || !time){
-    alert("Navn og tid skal udfyldes");
-    return;
-  }
+  const runs=data.routes[route];
+  runs.push({id:Date.now(),name,car,time});
 
-  const runs = data.routes[route];
-
-  const newRun = { 
-    id: Date.now(),
-    name, 
-    car, 
-    time, 
-    video 
-  };
-
-  // 🔥 OPDATÉR UI MED DET SAMME
-  runs.push(newRun);
   openRoute(route);
-
-  // send til Firebase bagefter
-  await db.collection("routes").doc(route).set({ runs });
-
-  document.getElementById("name").value="";
-  document.getElementById("car").value="";
-  document.getElementById("time").value="";
-  document.getElementById("video").value="";
+  await db.collection("routes").doc(route).set({runs});
 }
 
 async function deleteEntry(route,id){
-  let runs = data.routes[route];
-
-  runs = runs.filter(r => r.id !== id);
+  let runs=data.routes[route].filter(r=>r.id!==id);
   data.routes[route]=runs;
-
-  // 🔥 OPDATÉR UI MED DET SAMME
   openRoute(route);
-
-  await db.collection("routes").doc(route).set({ runs });
+  await db.collection("routes").doc(route).set({runs});
 }
 
-async function deleteRoute(route){
-  await db.collection("routes").doc(route).delete();
-  closeRoute();
-}
-</script>
+// ================= LEADERBOARD =================
+function openLeaderboard(){
+  const stats={};
 
-</body>
-</html>
+  for(const route in data.routes){
+    const sorted=[...data.routes[route]].sort((a,b)=>timeToSeconds(a.time)-timeToSeconds(b.time));
+    sorted.forEach((r,i)=>{
+      if(!stats[r.name]) stats[r.name]={runs:0,g:0,s:0,b:0};
+      stats[r.name].runs++;
+      if(i===0) stats[r.name].g++;
+      if(i===1) stats[r.name].s++;
+      if(i===2) stats[r.name].b++;
+    });
+  }
+
+  let rows="<tr><th>Navn</th><th>Runs</th><th>Medaljer</th></tr>";
+  for(const name in stats){
+    const s=stats[name];
