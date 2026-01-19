@@ -11,17 +11,32 @@
     body::before {
       content: "";
       position: fixed;
-      top: -100%;
-      left: -100%;
-      width: 300%;
-      height: 300%;
-      background: repeating-linear-gradient(
-        135deg,
-        rgba(255, 140, 0, 0.25) 0px,
-        rgba(255, 140, 0, 0.25) 12px,
-        transparent 12px,
-        transparent 220px
-      );
+      inset: -100% -100% -100% -100%;
+      background:
+        repeating-linear-gradient(
+          135deg,
+          rgba(255, 150, 0, 0.35) 0px,
+          rgba(255, 150, 0, 0.35) 14px,
+          transparent 14px,
+          transparent 180px
+        );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Ekstra lag så de krydser hinanden og ser mere random ud */
+    body::after {
+      content: "";
+      position: fixed;
+      inset: -100% -100% -100% -100%;
+      background:
+        repeating-linear-gradient(
+          35deg,
+          rgba(255, 120, 0, 0.28) 0px,
+          rgba(255, 120, 0, 0.28) 10px,
+          transparent 10px,
+          transparent 220px
+        );
       pointer-events: none;
       z-index: 0;
     }
