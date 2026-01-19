@@ -5,7 +5,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
   <title>Time Trials</title>
 
-  <!-- Firebase SDKs (compat) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -37,9 +37,7 @@
         linear-gradient(-45deg, #000 25%, transparent 25%),
         linear-gradient(45deg, transparent 75%, #000 75%),
         linear-gradient(-45deg, transparent 75%, #000 75%);
-      background-position: 0 0, 0 18px, 18px -18px, -18px 0px;
       background-color: #fff;
-      opacity: 1;
       pointer-events: none;
       z-index: 1;
     }
@@ -51,90 +49,81 @@
 
     .hero { text-align: center; margin-bottom: 30px; }
     .title {
-      font-size: 60px; font-weight: 900; letter-spacing: 6px; text-transform: uppercase;
+      font-size: 60px; font-weight: 900; letter-spacing: 6px;
       color: #ffb300;
-      text-shadow: 0 0 3px rgba(255, 179, 0, 0.7), 0 0 6px rgba(255, 140, 0, 0.5);
+      text-shadow: 0 0 6px rgba(255,180,0,0.8), 0 0 16px rgba(255,120,0,0.6);
     }
-    .subtitle { font-size: 20px; letter-spacing: 2px; color: #ffb300; }
+
+    .subtitle { font-size: 20px; letter-spacing: 2px; }
 
     .add-route { max-width: 320px; margin: 20px auto; background: #111; padding: 15px; border-radius: 8px; text-align: center; }
 
-    .runs-title {
-      text-align: center; font-size: 36px; font-weight: 900; color: #ff3333; margin-bottom: 15px; letter-spacing: 4px;
-      text-shadow: 0 0 4px rgba(255,0,0,0.7), 0 0 10px rgba(255,80,80,0.6), 0 0 18px rgba(255,120,120,0.4);
+    button {
+      padding: 6px 12px;
+      background: #222;
+      color: #ffb300;
+      border: 1px solid #ffb300;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+      margin-top: 6px;
     }
 
-    .routes { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding-top: 20px; }
+    button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 12px rgba(255,180,0,0.8);
+      color: #ffd65c;
+    }
+
+    .runs-title {
+      text-align: center;
+      font-size: 36px;
+      color: red;
+      margin-top: 30px;
+      text-shadow: 0 0 10px red;
+    }
+
+    .routes { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
 
     .route-card {
-      background: #111; padding: 15px; border-radius: 8px; width: 260px; cursor: pointer;
+      background: #111;
+      padding: 15px;
+      border-radius: 8px;
+      width: 260px;
+      cursor: pointer;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    .route-card:hover { transform: translateY(-6px) scale(1.03); box-shadow: 0 0 18px rgba(255, 180, 0, 0.4); }
 
-    .route-page { position: fixed; inset: 0; background: #000; display: none; overflow-y: auto; padding: 30px; z-index: 1000; }
-
-    .route-container { max-width: 900px; margin: auto; background: #111; padding: 25px; border-radius: 12px; box-shadow: 0 0 30px rgba(0,0,0,0.7); }
-
-    .route-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-
-    .back-btn { background: none; border: none; color: #f5c400; font-size: 18px; cursor: pointer; }
-
-    .form-row { display: flex; gap: 8px; margin-bottom: 10px; }
-
-    .form-row input {
-      padding: 6px; font-size: 14px; border-radius: 4px; background: #000; color: #ffb300; border: 1px solid #ffb300;
+    .route-card:hover {
+      transform: translateY(-6px) scale(1.05);
+      box-shadow: 0 0 18px rgba(255, 180, 0, 0.6);
     }
 
-    .name-input { width: 120px; }
-    .car-input { width: 120px; }
-    .time-input { width: 90px; }
-    .video-input { flex: 1; }
-
-    button {
-      padding: 6px 10px; background: #222; color: #ffb300; cursor: pointer; border: 1px solid #ffb300; border-radius: 4px;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+    .route-page {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      display: none;
+      overflow-y: auto;
+      padding: 30px;
+      z-index: 1000;
     }
 
-    button:hover { transform: scale(1.08); box-shadow: 0 0 10px rgba(255, 180, 0, 0.6); color: #ffd65c; }
-
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-    th, td { border: 1px solid #333; padding: 6px; text-align: center; }
-    th { background: #222; color: #ffb300; }
-
-    a { color: #ffb300; }
-
-    .trash { background: none; border: none; cursor: pointer; color: red; font-size: 14px; padding: 2px 4px; }
-
-    .medal { font-size: 20px; }
-
-    .leaderboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px; }
-
-    .lb-col h3 { text-align: center; margin-bottom: 15px; text-shadow: 0 0 6px rgba(255,180,0,0.6); }
-
-    .lb-row {
-      display: grid; grid-template-columns: 40px 1fr auto; align-items: center; padding: 10px 12px; margin-bottom: 8px;
-      background: #111; border: 1px solid #333; border-radius: 6px; transition: transform 0.15s ease, box-shadow 0.15s ease;
-    }
-
-    .lb-row:hover { transform: scale(1.02); box-shadow: 0 0 10px rgba(255,180,0,0.4); }
-
-    .lb-rank { font-weight: bold; color: #ffb300; text-align: center; }
-    .lb-name { padding-left: 8px; }
-    .lb-value { font-weight: bold; }
-
-    .game-box {
-      width: 320px; height: 320px; background: #000; border: 2px solid #ffb300;
-      margin: 20px auto; display: flex; justify-content: center; align-items: center;
-      box-shadow: 0 0 20px rgba(255,180,0,0.4);
+    .route-container {
+      max-width: 900px;
+      margin: auto;
+      background: #111;
+      padding: 25px;
+      border-radius: 12px;
     }
 
     canvas { background: #000; }
   </style>
 </head>
+
 <body>
 
-<!-- LOGIN GATE (NYT – INTET ANDET ÆNDRET) -->
+<!-- 🔒 LOGIN GATE -->
 <div id="loginGate" style="
   position: fixed;
   inset: 0;
@@ -176,7 +165,7 @@
   </div>
 </div>
 
-<!-- Racing flags -->
+<!-- FLAGS -->
 <div class="flag flag-left"></div>
 <div class="flag flag-right"></div>
 
@@ -188,8 +177,7 @@
 
   <div class="add-route">
     <h3>Tilføj ny rute</h3>
-    <input type="text" id="newRouteName" placeholder="Navn på rute" />
-    <br>
+    <input id="newRouteName" placeholder="Navn på rute"><br>
     <button onclick="addRoute()">Tilføj rute</button><br>
     <button onclick="openLeaderboard()">🏆 Leaderboard</button><br>
     <button onclick="openGames()">🎮 Games</button>
@@ -204,54 +192,100 @@
 <div class="route-page" id="gamesPage"></div>
 
 <script>
-// ================= FIREBASE SETUP =================
-const firebaseConfig = {
-  apiKey: "AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
-  authDomain: "time-trials-b519e.firebaseapp.com",
-  projectId: "time-trials-b519e",
-  storageBucket: "time-trials-b519e.firebasestorage.app",
-  messagingSenderId: "491396428595",
-  appId: "1:491396428595:web:627bc61e5cd1b9475fc446"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// ================= LOGIN SYSTEM (NYT) =================
+// ================= LOGIN SYSTEM (FIKSET) =================
 const PASSWORD = "AK47-DRIFT-TUNE";
 
 function checkPassword() {
   const input = document.getElementById("passwordInput").value;
+  const gate = document.getElementById("loginGate");
+
   if (input === PASSWORD) {
     localStorage.setItem("access", "true");
-    document.getElementById("loginGate").style.display = "none";
+    gate.style.display = "none";
+    gate.style.pointerEvents = "none";   // 🔥 VIGTIG FIX
   } else {
     document.getElementById("loginError").style.display = "block";
   }
 }
 
 window.addEventListener("load", () => {
+  const gate = document.getElementById("loginGate");
   if (localStorage.getItem("access") === "true") {
-    const gate = document.getElementById("loginGate");
-    if (gate) gate.style.display = "none";
+    gate.style.display = "none";
+    gate.style.pointerEvents = "none";   // 🔥 VIGTIG FIX
   }
 });
 
-// ================= DATA (REALTIME FRA FIREBASE) =================
+// ================= FIREBASE =================
+firebase.initializeApp({
+  apiKey: "AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
+  authDomain: "time-trials-b519e.firebaseapp.com",
+  projectId: "time-trials-b519e"
+});
+const db = firebase.firestore();
+
 let data = { routes: {} };
 
 db.collection("routes").onSnapshot(snapshot => {
   data.routes = {};
-  snapshot.forEach(doc => {
-    data.routes[doc.id] = doc.data().runs || [];
-  });
+  snapshot.forEach(doc => data.routes[doc.id] = doc.data().runs || []);
   render();
 });
 
-// ================= TIME PARSER + REST AF DIN KODE =================
+// ================= ROUTES =================
+function addRoute() {
+  const name = newRouteName.value.trim();
+  if (!name) return;
+  db.collection("routes").doc(name).set({ runs: [] });
+}
 
-// (ALT RESTEN ER 100% DET SAMME SOM FØR – INTET SLETTET)
+function render() {
+  routes.innerHTML = "";
+  for (const r in data.routes) {
+    const card = document.createElement("div");
+    card.className = "route-card";
+    card.innerHTML = `<h3>${r}</h3><div>Ingen tider endnu</div>`;
+    card.onclick = () => openRoute(r);
+    routes.appendChild(card);
+  }
+}
 
+// ================= GAMES / SNAKE =================
+function openGames() {
+  home.style.display = "none";
+  gamesPage.style.display = "block";
+  gamesPage.innerHTML = `
+    <div class="route-container">
+      <button onclick="closeGames()">← Tilbage</button>
+      <canvas id="snake" width="300" height="300"></canvas>
+    </div>
+  `;
+  startSnake();
+}
+
+function closeGames() {
+  gamesPage.style.display = "none";
+  home.style.display = "block";
+}
+
+function startSnake() {
+  const c = document.getElementById("snake");
+  const ctx = c.getContext("2d");
+  let x = 150, y = 150;
+
+  document.onkeydown = e => {
+    if (e.key === "ArrowUp") y -= 10;
+    if (e.key === "ArrowDown") y += 10;
+    if (e.key === "ArrowLeft") x -= 10;
+    if (e.key === "ArrowRight") x += 10;
+  };
+
+  setInterval(() => {
+    ctx.clearRect(0,0,300,300);
+    ctx.fillStyle = "#ffb300";
+    ctx.fillRect(x,y,10,10);
+  },100);
+}
 </script>
 
 </body>
