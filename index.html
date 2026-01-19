@@ -5,6 +5,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
   <title>Time Trials</title>
 
+  <!-- Firebase SDKs (compat så det virker direkte i browser + GitHub Pages) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
   <style>
     body { font-family: 'Orbitron', sans-serif; background: #000; color: #ffb300; padding: 20px; position: relative; overflow-x: hidden; }
 
@@ -174,12 +178,36 @@
 <div class="route-page" id="gamesPage"></div>
 
 <script>
-// ---------------- DATA ----------------
-let data = JSON.parse(localStorage.getItem("ruteData"));
-if (!data || !data.routes) data = { routes: {} };
-function save() { localStorage.setItem("ruteData", JSON.stringify(data)); }
+// ================= FIREBASE SETUP =================
+const firebaseConfig = {
+  apiKey: "AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
+  authDomain: "time-trials-b519e.firebaseapp.com",
+  projectId: "time-trials-b519e",
+  storageBucket: "time-trials-b519e.firebasestorage.app",
+  messagingSenderId: "491396428595",
+  appId: "1:491396428595:web:627bc61e5cd1b9475fc446"
+};
 
-// ---------------- TIME PARSER ----------------
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ================= DATA (REALTIME FRA FIREBASE) =================
+let data = { routes: {} };
+
+// Lyt realtime på hele routes-collection
+function listenData() {
+  db.collection("routes").onSnapshot(snapshot => {
+    data.routes = {};
+    snapshot.forEach(doc => {
+      data.routes[doc.id] = doc.data().runs || [];
+    });
+    render();
+  });
+}
+
+listenData();
+
+// ================= TIME PARSER =================
 function timeToSeconds(t) {
   if (!t) return Infinity;
   let cleaned = t.trim().replace(/,/g, ".");
@@ -203,11 +231,12 @@ function medalForPlace(i) {
   return i + 1;
 }
 
-// ---------------- ROUTES ----------------
-function addRoute() {
+// ================= ROUTES =================
+async function addRoute() {
   const name = document.getElementById("newRouteName").value.trim();
   if (!name) return;
-  if (!data.routes[name]) { data.routes[name] = []; save(); render(); }
+
+  await db.collection("routes").doc(name).set({ runs: [] });
   document.getElementById("newRouteName").value = "";
 }
 
@@ -220,15 +249,14 @@ function openRoute(route) {
 
   let rows = "";
   sortedRuns.forEach((e, index) => {
-    const realIndex = data.routes[route].indexOf(e);
     rows += `
       <tr>
         <td>${medalForPlace(index)}</td>
         <td>${e.name}</td>
-          <td>${e.car || "-"}</td>
+        <td>${e.car || "-"}</td>
         <td>${e.time}</td>
         <td>${e.video ? `<a href="${e.video}" target="_blank">Video</a>` : "-"}</td>
-        <td><button class="trash" onclick="deleteEntry('${route}', ${realIndex})">🗑️</button></td>
+        <td><button class="trash" onclick="deleteEntry('${route}', ${index})">🗑️</button></td>
       </tr>
     `;
   });
@@ -265,27 +293,34 @@ function closeRoute() {
   document.getElementById("home").style.display = "block";
 }
 
-function addEntry(route) {
+async function addEntry(route) {
   const name = document.getElementById("name").value;
-    const car = document.getElementById("car").value;
+  const car = document.getElementById("car").value;
   const time = document.getElementById("time").value;
   const video = document.getElementById("video").value;
   if (!name || !time) return;
-  data.routes[route].push({ name, time, video, car });
-  save(); render(); openRoute(route);
+
+  const runs = data.routes[route] || [];
+  runs.push({ name, time, video, car });
+
+  await db.collection("routes").doc(route).set({ runs });
+  openRoute(route);
 }
 
-function deleteEntry(route, index) {
-  data.routes[route].splice(index, 1);
-  save(); render(); openRoute(route);
+async function deleteEntry(route, index) {
+  const runs = data.routes[route];
+  runs.splice(index, 1);
+  await db.collection("routes").doc(route).set({ runs });
+  openRoute(route);
 }
 
-function deleteRoute(route) {
+async function deleteRoute(route) {
   if (!confirm(`Slet ruten "${route}"?`)) return;
-  delete data.routes[route]; save(); closeRoute(); render();
+  await db.collection("routes").doc(route).delete();
+  closeRoute();
 }
 
-// ---------------- LEADERBOARD ----------------
+// ================= LEADERBOARD =================
 function openLeaderboard() {
   document.getElementById("home").style.display = "none";
   const page = document.getElementById("leaderboardPage");
@@ -354,7 +389,7 @@ function closeLeaderboard() {
   document.getElementById("home").style.display = "block";
 }
 
-// ---------------- GAMES / SNAKE ----------------
+// ================= GAMES / SNAKE (UBEÆNDRET) =================
 let snakeInterval = null;
 let snakeKeyHandler = null;
 
@@ -464,7 +499,7 @@ function startSnake() {
   snakeInterval = setInterval(draw, 120);
 }
 
-// ---------------- RENDER HOME ----------------
+// ================= RENDER HOME =================
 function render() {
   const container = document.getElementById("routes");
   container.innerHTML = "";
@@ -487,7 +522,6 @@ function render() {
   }
 }
 
-render();
 </script>
 
 </body>
