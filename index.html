@@ -57,9 +57,8 @@ button{
 }
 button:hover{transform:scale(1.08);box-shadow:0 0 12px rgba(255,180,0,.7);}
 
-/* MENU BOKS */
 .menu-box{
-  max-width:340px;
+  max-width:380px;
   margin:20px auto;
   background:#111;
   padding:20px;
@@ -67,6 +66,8 @@ button:hover{transform:scale(1.08);box-shadow:0 0 12px rgba(255,180,0,.7);}
   box-shadow:0 0 25px rgba(0,0,0,.7);
   text-align:center;
 }
+
+.menu-row{display:flex;gap:10px;justify-content:center;margin-bottom:12px;}
 
 .route-card{
   background:#111;
@@ -111,6 +112,7 @@ th,td{border:1px solid #333;padding:6px;text-align:center;}
 th{background:#222;}
 a{color:#ffb300;}
 .trash{background:none;border:none;color:red;cursor:pointer;font-size:16px;}
+.medal{font-size:20px;}
 </style>
 </head>
 
@@ -122,16 +124,23 @@ a{color:#ffb300;}
 <div id="home">
   <h1 style="text-align:center;font-size:60px;">TIME TRIALS</h1>
 
-  <!-- MENU I BOKS -->
+  <!-- MENU -->
   <div class="menu-box">
-    <input id="newRouteName" placeholder="Navn på rute"><br><br>
-    <button onclick="addRoute()">Tilføj rute</button><br><br>
-    <button onclick="openLeaderboard()">🏆 Leaderboard</button><br><br>
-    <button onclick="openGames()">🎮 Games</button>
+
+    <div class="menu-row">
+      <input id="newRouteName" placeholder="Navn på rute">
+      <button onclick="addRoute()">Tilføj rute</button>
+    </div>
+
+    <div class="menu-row">
+      <button onclick="openLeaderboard()">🏆 Leaderboard</button>
+      <button onclick="openGames()">🎮 Games</button>
+    </div>
+
   </div>
 
   <h2 style="text-align:center;color:red;">RUNS</h2>
-  <div id="routes" style="display:flex;gap:20px;justify-content:center;"></div>
+  <div id="routes" style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;"></div>
 </div>
 
 <div class="route-page" id="leaderboardPage"></div>
@@ -168,6 +177,13 @@ function timeToSeconds(t){
   return parseInt(p[0])*60+parseFloat(p[1]);
 }
 
+function medal(i){
+  if(i===0)return "🥇";
+  if(i===1)return "🥈";
+  if(i===2)return "🥉";
+  return "";
+}
+
 // ================= ROUTES =================
 async function addRoute(){
   const name=newRouteName.value.trim();
@@ -186,7 +202,7 @@ function render(){
 
     let list="";
     top3.forEach((e,i)=>{
-      list+=`<div>${i+1}. ${e.name} – ${e.time}</div>`;
+      list+=`<div><span class="medal">${medal(i)}</span> ${e.name} – ${e.time}</div>`;
     });
 
     const card=document.createElement("div");
@@ -219,6 +235,7 @@ function openRoute(route){
   routePage.innerHTML=`
     <div class="route-container">
       <button onclick="closeRoute()">← Tilbage</button>
+      <button onclick="deleteRoute('${route}')" style="background:#800;margin-left:10px;">Slet hele ruten</button>
       <h2>${route}</h2>
 
       <input id="name" placeholder="Navn">
@@ -240,7 +257,7 @@ function closeRoute(){
 }
 
 async function addEntry(route){
-  const name=nameInput=document.getElementById("name").value;
+  const name=document.getElementById("name").value;
   const car=document.getElementById("car").value;
   const time=document.getElementById("time").value;
   const video=document.getElementById("video").value;
@@ -252,13 +269,19 @@ async function addEntry(route){
   openRoute(route);
 }
 
-// 🔥 SLET RUN – VIRKER NU
 async function deleteEntry(route,id){
   if(!confirm("Vil du slette dette run?"))return;
   let runs=data.routes[route];
   runs=runs.filter(r=>r.id!==id);
   await db.collection("routes").doc(route).set({runs});
   openRoute(route);
+}
+
+// 🔥 SLET HELE RUTEN
+async function deleteRoute(route){
+  if(!confirm("Vil du slette HELE ruten?"))return;
+  await db.collection("routes").doc(route).delete();
+  closeRoute();
 }
 
 // ================= LEADERBOARD =================
