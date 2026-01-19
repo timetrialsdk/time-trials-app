@@ -1,212 +1,125 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-<meta charset="UTF-8">
-<title>Time Trials</title>
-
-<style>
-body{
-  background:#111;
-  color:white;
-  font-family:Arial;
-  padding:20px;
-}
-button{
-  padding:6px 10px;
-  margin:4px 0;
-  cursor:pointer;
-}
-input{
-  display:block;
-  width:260px;
-  padding:8px;
-  margin:5px 0;
-}
-.route, .run{
-  background:#222;
-  padding:8px;
-  margin:6px 0;
-}
-.medal{font-size:18px;margin-right:4px}
-.small-btn{font-size:12px;padding:4px 6px}
-hr{margin:20px 0}
-</style>
+  <meta charset="UTF-8" />
+  <title>Rute Konkurrence</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+    }
+    form {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, select, button {
+      width: 100%;
+      padding: 8px;
+      margin: 6px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background: #eee;
+    }
+    a {
+      color: blue;
+    }
+  </style>
 </head>
 <body>
 
-<h1 style="color:gold">TIME TRIALS</h1>
-<p>hvis du ikke ryster, var det ikke hurtigt nok</p>
+  <h1>🏁 Rute Konkurrence</h1>
 
-<hr>
+  <form id="timeForm">
+    <label>Navn:</label>
+    <input type="text" id="name" required />
 
-<!-- ROUTES VIEW -->
-<div id="routesView">
-  <button id="addRoute">➕ Tilføj rute</button>
-  <div id="routes"></div>
-</div>
+    <label>Rute:</label>
+    <select id="route">
+      <option value="Skoven Rundt">Skoven Rundt</option>
+      <option value="By Sprint">By Sprint</option>
+      <option value="Lang Tur">Lang Tur</option>
+    </select>
 
-<!-- ROUTE PAGE -->
-<div id="routeView" style="display:none">
-  <button id="back">⬅ Tilbage</button>
-  <button id="deleteRoute" style="margin-left:10px">🗑️ Slet rute</button>
+    <label>Tid (fx 12:34):</label>
+    <input type="text" id="time" placeholder="mm:ss" required />
 
-  <h2 id="routeTitle"></h2>
+    <label>Video link (YouTube, TikTok osv.):</label>
+    <input type="url" id="video" placeholder="https://..." />
 
-  <h3>Tilføj run</h3>
-  <input id="name" placeholder="Navn">
-  <input id="time" placeholder="Tid (mm:ss)">
-  <input id="video" placeholder="Video-link">
-  <button id="addRun">Tilføj run</button>
+    <button type="submit">Gem tid</button>
+  </form>
 
-  <h3>Alle tider</h3>
-  <div id="runs"></div>
-</div>
+  <h2>Resultater</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Navn</th>
+        <th>Rute</th>
+        <th>Tid</th>
+        <th>Video</th>
+      </tr>
+    </thead>
+    <tbody id="results"></tbody>
+  </table>
 
-<script>
-/* ---------- STORAGE ---------- */
-const KEY = "time_trials_routes";
+  <script>
+    const form = document.getElementById("timeForm");
+    const resultsTable = document.getElementById("results");
 
-function save(){
-  localStorage.setItem(KEY, JSON.stringify(routes));
-}
-function load(){
-  const d = localStorage.getItem(KEY);
-  return d ? JSON.parse(d) : [];
-}
+    let data = JSON.parse(localStorage.getItem("ruteData")) || [];
 
-/* ---------- STATE ---------- */
-let routes = load();
-let currentRouteIndex = null;
+    function render() {
+      resultsTable.innerHTML = "";
+      data.forEach(entry => {
+        const row = document.createElement("tr");
 
-/* ---------- ELEMENTS ---------- */
-const routesView = document.getElementById("routesView");
-const routeView = document.getElementById("routeView");
-const routesDiv = document.getElementById("routes");
-const runsDiv = document.getElementById("runs");
+        row.innerHTML = `
+          <td>${entry.name}</td>
+          <td>${entry.route}</td>
+          <td>${entry.time}</td>
+          <td>${entry.video ? `<a href="${entry.video}" target="_blank">Se video</a>` : "-"}</td>
+        `;
 
-/* ---------- HELPERS ---------- */
-function timeToSeconds(t){
-  const [m,s] = t.split(":").map(Number);
-  return m*60 + s;
-}
+        resultsTable.appendChild(row);
+      });
+    }
 
-/* ---------- ADD ROUTE ---------- */
-document.getElementById("addRoute").onclick = () => {
-  routes.push({ name:"Ny rute", runs:[] });
-  save();
-  renderRoutes();
-};
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
 
-/* ---------- RENDER ROUTES (FORSIDE) ---------- */
-function renderRoutes(){
-  routesDiv.innerHTML = "";
+      const name = document.getElementById("name").value;
+      const route = document.getElementById("route").value;
+      const time = document.getElementById("time").value;
+      const video = document.getElementById("video").value;
 
-  routes.forEach((r,i)=>{
-    const div = document.createElement("div");
-    div.className = "route";
+      data.push({ name, route, time, video });
+      localStorage.setItem("ruteData", JSON.stringify(data));
 
-    const sorted = [...r.runs].sort((a,b)=>timeToSeconds(a.time)-timeToSeconds(b.time));
-
-    let top3 = "";
-    const medals = ["🥇","🥈","🥉"];
-    sorted.slice(0,3).forEach((run,idx)=>{
-      top3 += `<div>${medals[idx]} ${run.name} – ${run.time}</div>`;
+      form.reset();
+      render();
     });
 
-    div.innerHTML = `
-      <b>${r.name}</b>
-      ${top3 || "<div style='opacity:.6'>Ingen tider endnu</div>"}
-    `;
-
-    const open = document.createElement("button");
-    open.textContent = "Åbn";
-    open.onclick = ()=>openRoute(i);
-
-    div.appendChild(open);
-    routesDiv.appendChild(div);
-  });
-}
-
-/* ---------- OPEN ROUTE ---------- */
-function openRoute(index){
-  currentRouteIndex = index;
-  routesView.style.display = "none";
-  routeView.style.display = "block";
-  document.getElementById("routeTitle").textContent = routes[index].name;
-  renderRuns();
-}
-
-/* ---------- BACK ---------- */
-document.getElementById("back").onclick = ()=>{
-  routeView.style.display = "none";
-  routesView.style.display = "block";
-  renderRoutes();
-};
-
-/* ---------- DELETE ROUTE ---------- */
-document.getElementById("deleteRoute").onclick = ()=>{
-  if(confirm("Vil du slette ruten?")){
-    routes.splice(currentRouteIndex,1);
-    save();
-    routeView.style.display = "none";
-    routesView.style.display = "block";
-    renderRoutes();
-  }
-};
-
-/* ---------- ADD RUN ---------- */
-document.getElementById("addRun").onclick = ()=>{
-  const name = document.getElementById("name").value;
-  const time = document.getElementById("time").value;
-  const video = document.getElementById("video").value;
-
-  if(!name || !time){
-    alert("Udfyld navn og tid");
-    return;
-  }
-
-  routes[currentRouteIndex].runs.push({name,time,video});
-  save();
-
-  document.getElementById("name").value = "";
-  document.getElementById("time").value = "";
-  document.getElementById("video").value = "";
-
-  renderRuns();
-};
-
-/* ---------- RENDER RUNS (ALLE) ---------- */
-function renderRuns(){
-  runsDiv.innerHTML = "";
-
-  const sorted = [...routes[currentRouteIndex].runs]
-    .sort((a,b)=>timeToSeconds(a.time)-timeToSeconds(b.time));
-
-  sorted.forEach((r,i)=>{
-    const d = document.createElement("div");
-    d.className = "run";
-
-    const del = document.createElement("button");
-    del.textContent = "🗑️";
-    del.className = "small-btn";
-    del.onclick = ()=>{
-      const idx = routes[currentRouteIndex].runs.indexOf(r);
-      routes[currentRouteIndex].runs.splice(idx,1);
-      save();
-      renderRuns();
-    };
-
-    d.innerHTML = `<b>${r.name}</b> – ${r.time} `;
-    if(r.video) d.innerHTML += `🎥 `;
-    d.appendChild(del);
-
-    runsDiv.appendChild(d);
-  });
-}
-
-/* ---------- INIT ---------- */
-renderRoutes();
-</script>
+    render();
+  </script>
 
 </body>
 </html>
