@@ -168,7 +168,7 @@ function openRoute(route){
   const page=routePage;
   page.style.display="block";
 
-  const runs=data.routes[route];
+  const runs=[...data.routes[route]].sort((a,b)=>timeToSeconds(a.time)-timeToSeconds(b.time));
 
   let rows="";
   runs.forEach((e,i)=>{
@@ -207,16 +207,32 @@ function closeRoute(){
   home.style.display="block";
 }
 
+// ================= RUNS (FIXET HER) =================
 async function addEntry(route){
-  const name=name.value;
-  const car=car.value;
-  const time=time.value;
-  const video=video.value;
-  if(!name||!time)return;
+  const nameInput  = document.getElementById("name");
+  const carInput   = document.getElementById("car");
+  const timeInput  = document.getElementById("time");
+  const videoInput = document.getElementById("video");
 
-  const runs=data.routes[route];
-  runs.push({name,car,time,video});
-  await db.collection("routes").doc(route).set({runs});
+  const name  = nameInput.value.trim();
+  const car   = carInput.value.trim();
+  const time  = timeInput.value.trim();
+  const video = videoInput.value.trim();
+
+  if(!name || !time){
+    alert("Navn og tid skal udfyldes");
+    return;
+  }
+
+  const runs = data.routes[route];
+  runs.push({ name, car, time, video });
+
+  await db.collection("routes").doc(route).set({ runs });
+
+  nameInput.value="";
+  carInput.value="";
+  timeInput.value="";
+  videoInput.value="";
 }
 
 async function deleteEntry(route,index){
