@@ -43,7 +43,7 @@ body::before{
 .flag-left{top:140px;left:40px;transform:rotate(-18deg);}
 .flag-right{bottom:40px;right:40px;transform:rotate(12deg);}
 
-#home,.route-page,.popup{position:relative;z-index:2;}
+#home,.route-page,.popup,.lock{position:relative;z-index:2;}
 
 button{
   padding:8px 14px;
@@ -80,13 +80,13 @@ a{color:#ffb300;}
 
 .trash{background:none;border:none;color:red;cursor:pointer;font-size:18px;}
 
-.popup{
-  position:fixed;inset:0;display:none;background:rgba(0,0,0,.85);
-  align-items:center;justify-content:center;z-index:3000;
+.popup,.lock{
+  position:fixed;inset:0;display:none;background:rgba(0,0,0,.9);
+  align-items:center;justify-content:center;z-index:5000;
 }
-.popup-box{
-  background:#111;padding:20px;border-radius:12px;
-  max-width:600px;width:100%;
+.popup-box,.lock-box{
+  background:#111;padding:30px;border-radius:12px;
+  max-width:500px;width:100%;text-align:center;
   box-shadow:0 0 30px rgba(0,0,0,.8);
 }
 
@@ -95,6 +95,16 @@ a{color:#ffb300;}
 </head>
 
 <body>
+
+<!-- 🔒 LÅSESKÆRM -->
+<div class="lock" id="lockScreen">
+  <div class="lock-box">
+    <h2>🔒 Indtast kode for at fortsætte</h2>
+    <input id="siteCode" type="password" placeholder="Kode" style="padding:10px;width:80%;font-size:18px;">
+    <br><br>
+    <button onclick="checkSiteCode()">OK</button>
+  </div>
+</div>
 
 <div class="flag flag-left"></div>
 <div class="flag flag-right"></div>
@@ -128,7 +138,7 @@ a{color:#ffb300;}
 
 <!-- GAMES -->
 <div class="popup" id="gamesPopup">
-  <div class="popup-box" style="text-align:center;">
+  <div class="popup-box">
     <button onclick="closeGames()">← Tilbage</button>
     <h2>🎮 Snake</h2>
     <p>Tryk SPACE for at starte / pause</p>
@@ -137,6 +147,21 @@ a{color:#ffb300;}
 </div>
 
 <script>
+// ================= KODE TIL AT KOMME IND PÅ SIDEN 🔒 =================
+const SITE_CODE = "1234";   // 🔥 HER SKRIVER DU DEN KODE I VIL BRUGE
+
+lockScreen.style.display = "flex";
+
+function checkSiteCode(){
+  const input = document.getElementById("siteCode").value;
+
+  if(input === SITE_CODE){
+    lockScreen.style.display = "none";
+  }else{
+    alert("Forkert kode");
+  }
+}
+
 // ================= FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyD0Dj_iZYH37GE5ArCidiTgQ5MLb3jatbE",
@@ -261,7 +286,7 @@ async function deleteEntry(route,id){
   await db.collection("routes").doc(route).set({runs});
 }
 
-// ================= LEADERBOARD (FIXET 🔥) =================
+// ================= LEADERBOARD =================
 function openLeaderboard(){
   const stats={};
 
