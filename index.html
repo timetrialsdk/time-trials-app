@@ -15,31 +15,17 @@
       background:
         repeating-linear-gradient(
           135deg,
-          rgba(255, 150, 0, 0.35) 0px,
-          rgba(255, 150, 0, 0.35) 14px,
-          transparent 14px,
-          transparent 180px
+          rgba(255, 150, 0, 0.32) 0px,
+          rgba(255, 150, 0, 0.32) 16px,
+          transparent 16px,
+          transparent 320px
         );
       pointer-events: none;
       z-index: 0;
     }
 
     /* Ekstra lag så de krydser hinanden og ser mere random ud */
-    body::after {
-      content: "";
-      position: fixed;
-      inset: -100% -100% -100% -100%;
-      background:
-        repeating-linear-gradient(
-          35deg,
-          rgba(255, 120, 0, 0.28) 0px,
-          rgba(255, 120, 0, 0.28) 10px,
-          transparent 10px,
-          transparent 220px
-        );
-      pointer-events: none;
-      z-index: 0;
-    }
+    
 
     /* sørg for at alt indhold ligger OVER stregerne */
     #home, .route-page {
