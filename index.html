@@ -81,13 +81,21 @@ a{color:#ffb300;}
 .trash{background:none;border:none;color:red;cursor:pointer;font-size:18px;}
 
 .popup,.lock{
-  position:fixed;inset:0;display:none;background:rgba(0,0,0,.9);
+  position:fixed;inset:0;display:none;background:#000;   /* 🔥 HELT SORT */
   align-items:center;justify-content:center;z-index:5000;
 }
 .popup-box,.lock-box{
-  background:#111;padding:30px;border-radius:12px;
+  background:#000;   /* 🔥 HELT SORT BOKS */
+  padding:40px;border-radius:12px;
   max-width:500px;width:100%;text-align:center;
   box-shadow:0 0 30px rgba(0,0,0,.8);
+}
+
+.lock-text{
+  font-family:'Orbitron',sans-serif;
+  color:#ffb300;
+  font-size:22px;
+  margin-bottom:25px;
 }
 
 #snakeCanvas{background:#000;border:2px solid #ffb300;}
@@ -99,8 +107,13 @@ a{color:#ffb300;}
 <!-- 🔒 LÅSESKÆRM -->
 <div class="lock" id="lockScreen">
   <div class="lock-box">
-    <h2>🔒 Indtast kode for at fortsætte</h2>
-    <input id="siteCode" type="password" placeholder="Kode" style="padding:10px;width:80%;font-size:18px;">
+    <div class="lock-text">alle kan køre bilen men ikke alle har rettet</div>
+
+    <input id="siteCode" type="password" placeholder="Kode"
+      style="padding:12px;width:80%;font-size:18px;
+      background:#000;color:#ffb300;border:1px solid #ffb300;
+      font-family:'Orbitron',sans-serif;text-align:center;">
+
     <br><br>
     <button onclick="checkSiteCode()">OK</button>
   </div>
@@ -138,7 +151,7 @@ a{color:#ffb300;}
 
 <!-- GAMES -->
 <div class="popup" id="gamesPopup">
-  <div class="popup-box">
+  <div class="popup-box" style="text-align:center;">
     <button onclick="closeGames()">← Tilbage</button>
     <h2>🎮 Snake</h2>
     <p>Tryk SPACE for at starte / pause</p>
@@ -147,8 +160,8 @@ a{color:#ffb300;}
 </div>
 
 <script>
-// ================= KODE TIL AT KOMME IND PÅ SIDEN 🔒 =================
-const SITE_CODE = "1234";   // 🔥 HER SKRIVER DU DEN KODE I VIL BRUGE
+// ================= KODE TIL AT KOMME IND 🔒 =================
+const SITE_CODE = "AK47-DRIFT-TUNE";   // 🔥 DIN NYE KODE
 
 lockScreen.style.display = "flex";
 
