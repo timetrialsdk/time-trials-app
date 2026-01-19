@@ -51,7 +51,7 @@
       background: #111;
       padding: 15px;
       border-radius: 8px;
-      width: 250px;
+      width: 260px;
       cursor: pointer;
     }
 
@@ -98,6 +98,11 @@
       cursor: pointer;
       color: red;
       font-size: 16px;
+    }
+
+    .medal {
+      font-size: 18px;
+      margin-right: 6px;
     }
   </style>
 </head>
@@ -157,6 +162,7 @@
       const realIndex = data.routes[route].indexOf(e);
       rows += `
         <tr>
+          <td>${index+1}</td>
           <td>${e.name}</td>
           <td>${e.time}</td>
           <td>${e.video ? `<a href="${e.video}" target="_blank">Video</a>` : "-"}</td>
@@ -176,7 +182,7 @@
 
       <table>
         <thead>
-          <tr><th>Navn</th><th>Tid</th><th>Video</th><th></th></tr>
+          <tr><th>#</th><th>Navn</th><th>Tid</th><th>Video</th><th></th></tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
@@ -211,6 +217,13 @@
     render();
   }
 
+  function medalForPlace(i) {
+    if (i === 0) return "🥇";
+    if (i === 1) return "🥈";
+    if (i === 2) return "🥉";
+    return "";
+  }
+
   function render() {
     const container = document.getElementById("routes");
     container.innerHTML = "";
@@ -221,8 +234,8 @@
       const top3 = sorted.slice(0,3);
 
       let list = "";
-      top3.forEach(e => {
-        list += `<div>${e.name} – ${e.time}</div>`;
+      top3.forEach((e, i) => {
+        list += `<div><span class="medal">${medalForPlace(i)}</span>${e.name} – ${e.time}</div>`;
       });
 
       const card = document.createElement("div");
