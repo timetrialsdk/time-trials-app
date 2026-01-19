@@ -91,12 +91,8 @@ a{color:#ffb300;}
   box-shadow:0 0 30px rgba(0,0,0,.8);
 }
 
-.lock{
-  background:#000;
-}
-.lock-box{
-  background:#000;
-}
+.lock{background:#000;}
+.lock-box{background:#000;}
 .lock-text{
   font-family:'Orbitron',sans-serif;
   color:#ffb300;
@@ -114,12 +110,10 @@ a{color:#ffb300;}
 <div class="lock" id="lockScreen">
   <div class="lock-box">
     <div class="lock-text">alle kan køre bilen men ikke alle har rettet</div>
-
     <input id="siteCode" type="password" placeholder="Kode"
       style="padding:12px;width:80%;font-size:18px;
       background:#000;color:#ffb300;border:1px solid #ffb300;
       font-family:'Orbitron',sans-serif;text-align:center;">
-
     <br><br>
     <button onclick="checkSiteCode()">OK</button>
   </div>
@@ -259,6 +253,8 @@ function openRoute(route){
   routePage.innerHTML=`
     <div class="route-container">
       <button onclick="closeRoute()">← Tilbage</button>
+      <button class="trash" style="float:right;" onclick="deleteRoute('${route}')">🗑️</button>
+
       <h2>${route}</h2>
 
       <input id="name" placeholder="Navn">
@@ -275,6 +271,17 @@ function openRoute(route){
 }
 
 function closeRoute(){
+  currentRoute=null;
+  routePage.style.display="none";
+  home.style.display="block";
+}
+
+// 🗑️ SLET HELE RUTEN
+async function deleteRoute(route){
+  if(!confirm("Er du sikker på at du vil slette hele ruten?")) return;
+
+  await db.collection("routes").doc(route).delete();
+
   currentRoute=null;
   routePage.style.display="none";
   home.style.display="block";
@@ -343,7 +350,7 @@ function closeLeaderboard(){
   leaderboardPopup.style.display="none";
 }
 
-// ================= SNAKE (RESET FIX 🔥) =================
+// ================= SNAKE =================
 let canvas=document.getElementById("snakeCanvas");
 let ctx=canvas.getContext("2d");
 
@@ -355,15 +362,12 @@ function resetSnake(){
   food=[Math.floor(Math.random()*20),Math.floor(Math.random()*20)];
   draw();
 }
-
 resetSnake();
 
 function draw(){
   ctx.clearRect(0,0,300,300);
-
   ctx.fillStyle="red";
   ctx.fillRect(food[0]*15,food[1]*15,15,15);
-
   ctx.fillStyle="lime";
   snake.forEach(s=>ctx.fillRect(s[0]*15,s[1]*15,15,15));
 }
