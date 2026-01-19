@@ -92,7 +92,11 @@
 <div class="routes" id="routes"></div>
 
 <script>
-  let data = JSON.parse(localStorage.getItem("ruteData")) || { routes: {} };
+  let data = JSON.parse(localStorage.getItem("ruteData"));
+
+if (!data || !data.routes) {
+  data = { routes: {} };
+}
 
   function save() {
     localStorage.setItem("ruteData", JSON.stringify(data));
