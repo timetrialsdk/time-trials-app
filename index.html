@@ -10,17 +10,36 @@
     .title { font-size: 60px; font-weight: bold; color: #f5c400; letter-spacing: 4px; }
     .subtitle { font-size: 22px; color: #f5c400; margin-top: 10px; font-style: italic; }
 
-    .add-route { max-width: 400px; margin: 20px auto; background: #111; padding: 15px; border-radius: 8px; text-align: center; }
+    .add-route { max-width: 320px; margin: 20px auto; background: #111; padding: 15px; border-radius: 8px; text-align: center; }
 
     .routes { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding-top: 20px; }
 
     .route-card { background: #111; padding: 15px; border-radius: 8px; width: 260px; cursor: pointer; }
     .route-card:hover { background: #1a1a1a; }
 
-    .editor { margin-top: 30px; background: #111; padding: 20px; border-radius: 8px; }
+    .editor { margin-top: 30px; background: #111; padding: 20px; border-radius: 8px; max-width: 800px; margin-left: auto; margin-right: auto; }
 
-    input, button { width: 100%; padding: 8px; margin: 5px 0; border: none; border-radius: 4px; }
-    button { background: #444; color: white; cursor: pointer; }
+    /* Kompakt input-design */
+    .form-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .form-row input {
+      padding: 6px;
+      font-size: 14px;
+      border-radius: 4px;
+      background: #000;
+      color: #fff;
+      border: 1px solid #333;
+    }
+
+    .name-input { width: 120px; }
+    .time-input { width: 90px; }
+    .video-input { flex: 1; }
+
+    button { padding: 6px 10px; background: #444; color: white; cursor: pointer; border: none; border-radius: 4px; }
     button:hover { background: #666; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
@@ -29,7 +48,17 @@
 
     a { color: #4da6ff; }
 
-    .trash { background: none; border: none; cursor: pointer; color: red; font-size: 16px; }
+    /* Lille skraldespand */
+    .trash {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: red;
+      font-size: 14px;
+      padding: 2px 4px;
+    }
+
+    .trash:hover { color: #ff4444; }
 
     .medal { font-size: 20px; }
   </style>
@@ -67,7 +96,7 @@
     if (i === 0) return "🥇";
     if (i === 1) return "🥈";
     if (i === 2) return "🥉";
-    return "";
+    return i + 1;
   }
 
   function addRoute() {
@@ -94,11 +123,11 @@
       const realIndex = data.routes[route].indexOf(e);
       rows += `
         <tr>
-          <td>${medalForPlace(index) || index+1}</td>
+          <td>${medalForPlace(index)}</td>
           <td>${e.name}</td>
           <td>${e.time}</td>
           <td>${e.video ? `<a href=\"${e.video}\" target=\"_blank\">Video</a>` : "-"}</td>
-          <td><button class="trash" onclick="deleteEntry('${route}', ${realIndex})">🗑️</button></td>
+          <td><button class=\"trash\" onclick=\"deleteEntry('${route}', ${realIndex})\">🗑️</button></td>
         </tr>
       `;
     });
@@ -106,10 +135,13 @@
     editor.innerHTML = `
       <h2>${route}</h2>
 
-      <input type="text" id="name" placeholder="Navn" />
-      <input type="text" id="time" placeholder="Tid (mm:ss)" />
-      <input type="url" id="video" placeholder="Video link" />
-      <button onclick="addEntry('${route}')">Tilføj run</button>
+      <div class="form-row">
+        <input class="name-input" type="text" id="name" placeholder="Navn" />
+        <input class="time-input" type="text" id="time" placeholder="mm:ss" />
+        <input class="video-input" type="url" id="video" placeholder="Video link" />
+        <button onclick="addEntry('${route}')">+ Run</button>
+      </div>
+
       <button onclick="deleteRoute('${route}')" style="background:#a00000">Slet rute</button>
 
       <table>
