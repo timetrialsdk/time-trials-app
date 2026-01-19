@@ -105,8 +105,19 @@
 
     .routes { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding-top: 20px; }
 
-    .route-card { background: #111; padding: 15px; border-radius: 8px; width: 260px; cursor: pointer; }
-    .route-card:hover { background: #1a1a1a; }
+    .route-card {
+      background: #111;
+      padding: 15px;
+      border-radius: 8px;
+      width: 260px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .route-card:hover {
+      background: #1a1a1a;
+      transform: translateY(-6px) scale(1.03);
+      box-shadow: 0 0 18px rgba(255, 180, 0, 0.4);
+    }
 
     /* ROUTE SIDE (fuld skærm side) */
     .route-page {
@@ -162,14 +173,33 @@
     .time-input { width: 90px; }
     .video-input { flex: 1; }
 
-    button { padding: 6px 10px; background: #222; color: #ffb300; cursor: pointer; border: 1px solid #ffb300; border-radius: 4px; }
+    button {
+      padding: 6px 10px;
+      background: #222;
+      color: #ffb300;
+      cursor: pointer;
+      border: 1px solid #ffb300;
+      border-radius: 4px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+    }
+
+    button:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 10px rgba(255, 180, 0, 0.6);
+      color: #ffd65c;
+    }
     button:hover { background: #666; }
 
     table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
     th, td { border: 1px solid #333; padding: 6px; text-align: center; }
     th { background: #222; color: #ffb300; }
 
-    a { color: #ffb300; }
+    a { color: #ffb300; transition: transform 0.15s ease, text-shadow 0.15s ease; }
+
+a:hover {
+      transform: scale(1.05);
+      text-shadow: 0 0 8px rgba(255, 180, 0, 0.6);
+    }
 
     .trash { background: none; border: none; cursor: pointer; color: red; font-size: 14px; padding: 2px 4px; }
     .trash:hover { color: #ff4444; }
