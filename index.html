@@ -33,6 +33,20 @@
 
     .add-route { max-width: 320px; margin: 20px auto; background: #111; padding: 15px; border-radius: 8px; text-align: center; }
 
+    .runs-title {
+      text-align: center;
+      font-size: 36px;
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 900;
+      color: #ff3333;
+      margin-bottom: 15px;
+      letter-spacing: 4px;
+      text-shadow:
+        0 0 4px rgba(255, 0, 0, 0.7),
+        0 0 10px rgba(255, 80, 80, 0.6),
+        0 0 18px rgba(255, 120, 120, 0.4);
+    }
+
     .routes { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; padding-top: 20px; }
 
     .route-card { background: #111; padding: 15px; border-radius: 8px; width: 260px; cursor: pointer; }
@@ -121,7 +135,7 @@
     <button onclick="addRoute()">Tilføj rute</button>
   </div>
 
-  <h2 style="text-align:center">Forside – Top 3 tider</h2>
+  <div class="runs-title">RUNS</div>
   <div class="routes" id="routes"></div>
 </div>
 
