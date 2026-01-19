@@ -11,38 +11,104 @@
 
 <style>
 body { font-family:'Orbitron',sans-serif; background:#000; color:#ffb300; overflow-x:hidden; }
-button{padding:8px 14px;background:#111;color:#ffb300;border:1px solid #ffb300;border-radius:6px;cursor:pointer;}
+
+/* SPEED LINES */
+body::before{
+  content:"";
+  position:fixed;
+  inset:-100% -100% -100% -100%;
+  background:repeating-linear-gradient(135deg,
+    rgba(255,150,0,0.32) 0px,
+    rgba(255,150,0,0.32) 16px,
+    transparent 16px,
+    transparent 320px);
+  pointer-events:none;
+  z-index:1;
+}
+
+/* FLAGS */
+.flag{
+  position:fixed;
+  width:180px;height:130px;
+  background-size:36px 36px;
+  background-image:
+    linear-gradient(45deg,#000 25%,transparent 25%),
+    linear-gradient(-45deg,#000 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#000 75%),
+    linear-gradient(-45deg,transparent 75%,#000 75%);
+  background-position:0 0,0 18px,18px -18px,-18px 0px;
+  background-color:#fff;
+  z-index:1;
+}
+.flag-left{top:140px;left:40px;transform:rotate(-18deg);}
+.flag-right{bottom:40px;right:40px;transform:rotate(12deg);}
+
+#home,.route-page,.popup{position:relative;z-index:2;}
+
+button{
+  padding:8px 14px;
+  background:#111;
+  color:#ffb300;
+  border:1px solid #ffb300;
+  border-radius:6px;
+  cursor:pointer;
+  transition:.15s;
+}
 button:hover{transform:scale(1.08);box-shadow:0 0 12px rgba(255,180,0,.7);}
 
-.menu-box{max-width:420px;margin:20px auto;background:#111;padding:20px;border-radius:12px;text-align:center;}
-.route-card{background:#111;padding:15px;border-radius:8px;width:260px;cursor:pointer;}
-.route-page{position:fixed;inset:0;display:none;padding:30px;z-index:1000;background:#000;}
-.route-container{max-width:900px;margin:auto;background:#111;padding:25px;border-radius:12px;}
+.menu-box{
+  max-width:420px;margin:20px auto;background:#111;padding:20px;border-radius:12px;
+  box-shadow:0 0 25px rgba(0,0,0,.7);text-align:center;
+}
+
+.route-card{
+  background:#111;padding:15px;border-radius:8px;width:260px;cursor:pointer;
+  box-shadow:0 0 15px rgba(0,0,0,.6);
+}
+
+.route-page{position:fixed;inset:0;display:none;padding:30px;z-index:1000;}
+
+.route-container{
+  max-width:900px;margin:auto;background:#111;padding:25px;border-radius:12px;
+  box-shadow:0 0 30px rgba(0,0,0,.7);
+}
+
 table{width:100%;border-collapse:collapse;margin-top:15px;}
 th,td{border:1px solid #333;padding:6px;text-align:center;}
-.trash{background:none;border:none;color:red;font-size:18px;cursor:pointer;}
+th{background:#222;}
+a{color:#ffb300;}
 
+.trash{background:none;border:none;color:red;cursor:pointer;font-size:18px;}
+
+/* POPUPS */
 .popup{
-  position:fixed;inset:0;display:none;background:rgba(0,0,0,.8);z-index:2000;
-  align-items:center;justify-content:center;
+  position:fixed;inset:0;display:none;background:rgba(0,0,0,.85);
+  align-items:center;justify-content:center;z-index:3000;
 }
 .popup-box{
-  background:#111;padding:20px;border-radius:12px;max-width:500px;width:100%;
+  background:#111;padding:20px;border-radius:12px;
+  max-width:500px;width:100%;
+  box-shadow:0 0 30px rgba(0,0,0,.8);
 }
+
 #snakeCanvas{background:#000;border:2px solid #ffb300;}
 </style>
 </head>
 
 <body>
 
+<div class="flag flag-left"></div>
+<div class="flag flag-right"></div>
+
 <div id="home">
   <h1 style="text-align:center;font-size:60px;">TIME TRIALS</h1>
+  <div style="text-align:center;font-size:20px;">hvis ikke du ryster, var det ikke hurtigt nok</div>
 
   <div class="menu-box">
     <input id="newRouteName" placeholder="Navn på rute">
     <button onclick="addRoute()">Tilføj rute</button><br><br>
 
-    <!-- KNAPPERNE ER TILBAGE HER 🔥 -->
+    <!-- KNAPPERNE UNDER TILFØJ RUTE -->
     <button onclick="openLeaderboard()">🏆 Leaderboard</button>
     <button onclick="openGames()">🎮 Games</button>
   </div>
@@ -53,7 +119,7 @@ th,td{border:1px solid #333;padding:6px;text-align:center;}
 
 <div class="route-page" id="routePage"></div>
 
-<!-- LEADERBOARD POPUP -->
+<!-- LEADERBOARD -->
 <div class="popup" id="leaderboardPopup">
   <div class="popup-box">
     <button onclick="closeLeaderboard()">← Tilbage</button>
@@ -62,7 +128,7 @@ th,td{border:1px solid #333;padding:6px;text-align:center;}
   </div>
 </div>
 
-<!-- GAMES POPUP -->
+<!-- GAMES -->
 <div class="popup" id="gamesPopup">
   <div class="popup-box" style="text-align:center;">
     <button onclick="closeGames()">← Tilbage</button>
@@ -86,11 +152,13 @@ const db = firebase.firestore();
 let data={routes:{}};
 let currentRoute=null;
 
+// LIVE OPDATERING
 db.collection("routes").onSnapshot(snapshot=>{
   data.routes={};
   snapshot.forEach(doc=>{
     data.routes[doc.id]=doc.data().runs||[];
   });
+
   render();
   if(currentRoute) openRoute(currentRoute);
 });
@@ -211,3 +279,69 @@ function openLeaderboard(){
   let rows="<tr><th>Navn</th><th>Runs</th><th>Medaljer</th></tr>";
   for(const name in stats){
     const s=stats[name];
+    rows+=`
+      <tr>
+        <td>${name}</td>
+        <td>${s.runs}</td>
+        <td>🥇 ${s.g} 🥈 ${s.s} 🥉 ${s.b}</td>
+      </tr>`;
+  }
+
+  leaderboardTable.innerHTML=rows;
+  leaderboardPopup.style.display="flex";
+}
+
+function closeLeaderboard(){
+  leaderboardPopup.style.display="none";
+}
+
+// ================= SNAKE =================
+let canvas=document.getElementById("snakeCanvas");
+let ctx=canvas.getContext("2d");
+let snake=[[5,5]];
+let dir=[1,0];
+let food=[10,10];
+let playing=false;
+
+function draw(){
+  ctx.clearRect(0,0,300,300);
+  ctx.fillStyle="red";
+  ctx.fillRect(food[0]*15,food[1]*15,15,15);
+
+  ctx.fillStyle="lime";
+  snake.forEach(s=>ctx.fillRect(s[0]*15,s[1]*15,15,15));
+}
+
+function step(){
+  if(!playing)return;
+
+  const head=[snake[0][0]+dir[0],snake[0][1]+dir[1]];
+  if(head[0]<0||head[1]<0||head[0]>19||head[1]>19){playing=false;return;}
+
+  snake.unshift(head);
+
+  if(head[0]==food[0]&&head[1]==food[1]){
+    food=[Math.floor(Math.random()*20),Math.floor(Math.random()*20)];
+  }else{
+    snake.pop();
+  }
+
+  draw();
+}
+
+setInterval(step,150);
+
+document.addEventListener("keydown",e=>{
+  if(e.code==="Space") playing=!playing;
+  if(e.key==="ArrowUp") dir=[0,-1];
+  if(e.key==="ArrowDown") dir=[0,1];
+  if(e.key==="ArrowLeft") dir=[-1,0];
+  if(e.key==="ArrowRight") dir=[1,0];
+});
+
+function openGames(){gamesPopup.style.display="flex";}
+function closeGames(){gamesPopup.style.display="none";}
+</script>
+
+</body>
+</html>
