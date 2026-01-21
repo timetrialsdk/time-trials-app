@@ -203,6 +203,25 @@ function timeToSeconds(t){
 }
 function medal(i){return ["🥇","🥈","🥉"][i];}
 
+// ================= BILLEDE HÅNDTERING =================
+let selectedImage = null;
+
+document.addEventListener("change", e => {
+  if (e.target.id === "imageInput") {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      selectedImage = reader.result;
+      const img = document.getElementById("imagePreview");
+      img.src = selectedImage;
+      img.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
 // ================= ROUTES =================
 async function addRoute(){
   const name=newRouteName.value.trim();
@@ -245,7 +264,11 @@ function openRoute(route){
         <td>${e.name}</td>
         <td>${e.car||"-"}</td>
         <td>${e.time}</td>
-        <td>${e.video?`<a href="${e.video}" target="_blank">Video</a>`:"-"}</td>
+        <td>
+          ${e.video?`<a href="${e.video}" target="_blank">Video</a>`:"-"}
+          <br>
+          ${e.image?`<img src="${e.image}" style="max-width:80px;max-height:60px;margin-top:5px;border:1px solid #ffb300;cursor:pointer;" onclick="openImage('${e.image}')">`:""}
+        </td>
         <td><button class="trash" onclick="deleteEntry('${route}',${e.id})">🗑️</button></td>
       </tr>`;
   });
@@ -260,11 +283,17 @@ function openRoute(route){
       <input id="name" placeholder="Navn">
       <input id="car" placeholder="Bil">
       <input id="time" placeholder="mm:ss">
-      <input id="video" placeholder="Video link">
+      <input id="video" placeholder="Video link"><br><br>
+
+      <input id="imageInput" type="file" accept="image/*">
+      <br>
+      <img id="imagePreview" style="max-width:200px;max-height:150px;margin-top:10px;display:none;border:1px solid #ffb300;">
+      <br><br>
+
       <button onclick="addEntry('${route}')">+ Run</button>
 
       <table>
-        <tr><th>#</th><th>Navn</th><th>Bil</th><th>Tid</th><th>Video</th><th></th></tr>
+        <tr><th>#</th><th>Navn</th><th>Bil</th><th>Tid</th><th>Video / Billede</th><th></th></tr>
         ${rows}
       </table>
     </div>`;
@@ -296,7 +325,17 @@ async function addEntry(route){
   if(!name||!time)return;
 
   const runs=data.routes[route];
-  runs.push({id:Date.now(),name,car,time,video});
+
+  runs.push({
+    id:Date.now(),
+    name,
+    car,
+    time,
+    video,
+    image: selectedImage || null
+  });
+
+  selectedImage = null;
 
   openRoute(route);
   await db.collection("routes").doc(route).set({runs});
@@ -348,6 +387,27 @@ function openLeaderboard(){
 
 function closeLeaderboard(){
   leaderboardPopup.style.display="none";
+}
+
+// ================= BILLEDE POPUP =================
+function openImage(src){
+  const popup=document.createElement("div");
+  popup.style.position="fixed";
+  popup.style.inset="0";
+  popup.style.background="rgba(0,0,0,0.9)";
+  popup.style.display="flex";
+  popup.style.alignItems="center";
+  popup.style.justifyContent="center";
+  popup.style.zIndex="6000";
+
+  popup.innerHTML=`
+    <div style="position:relative;">
+      <img src="${src}" style="max-width:90vw;max-height:90vh;border:2px solid #ffb300;">
+      <button style="position:absolute;top:-10px;right:-10px;" onclick="this.parentElement.parentElement.remove()">X</button>
+    </div>
+  `;
+
+  document.body.appendChild(popup);
 }
 
 // ================= SNAKE =================
