@@ -71,7 +71,16 @@ button:hover{transform:scale(1.08);box-shadow:0 0 12px rgba(255,180,0,.7);}
   box-shadow:0 0 15px rgba(0,0,0,.6);
 }
 
-.route-page{position:fixed;inset:0;display:none;padding:30px;z-index:1000;}
+/* VIGTIGT: GØR SCROLL MULIG */
+.route-page{
+  position:fixed;
+  inset:0;
+  display:none;
+  padding:30px;
+  z-index:1000;
+  overflow-y:auto;
+  -webkit-overflow-scrolling: touch;
+}
 
 .route-container{
   max-width:900px;margin:auto;background:#111;padding:25px;border-radius:12px;
@@ -240,6 +249,9 @@ const db = firebase.firestore();
 let data={routes:{}};
 let currentRoute=null;
 
+// HER GEMMES DET VALGTE BILLEDE
+let currentImage = null;
+
 db.collection("routes").onSnapshot(snapshot=>{
   data.routes={};
   snapshot.forEach(doc=>{
@@ -257,10 +269,7 @@ function timeToSeconds(t){
 }
 function medal(i){return ["🥇","🥈","🥉"][i];}
 
-// ================= BILLEDE HÅNDTERING =================
-let selectedImage = null;
-let savedImage = null;
-
+// ================= BILLEDE =================
 document.addEventListener("change", e => {
   if (e.target.id === "imageInput") {
     const file = e.target.files[0];
@@ -268,21 +277,14 @@ document.addEventListener("change", e => {
 
     const reader = new FileReader();
     reader.onload = () => {
-      selectedImage = reader.result;
+      currentImage = reader.result;
       const img = document.getElementById("imagePreview");
-      img.src = selectedImage;
+      img.src = currentImage;
       img.style.display = "block";
     };
     reader.readAsDataURL(file);
   }
 });
-
-function saveTempImage(){
-  if(selectedImage){
-    savedImage = selectedImage;
-    alert("Billede gemt");
-  }
-}
 
 // ================= ROUTES =================
 async function addRoute(){
@@ -349,9 +351,7 @@ function openRoute(route){
 
       <input id="imageInput" type="file" accept="image/*">
       <br>
-      <img id="imagePreview" style="max-width:340px;max-height:240px;margin-top:10px;display:none;border:3px solid #ffb300;object-fit:cover;">
-      <br>
-      <button onclick="saveTempImage()">Gem billede</button>
+      <img id="imagePreview" style="max-width:680px;max-height:480px;margin-top:10px;display:${currentImage?'block':'none'};border:3px solid #ffb300;object-fit:cover;" src="${currentImage||''}">
       <br><br>
 
       <button onclick="addEntry('${route}')">+ Run</button>
@@ -365,11 +365,12 @@ function openRoute(route){
 
 function closeRoute(){
   currentRoute=null;
+  currentImage=null;
   routePage.style.display="none";
   home.style.display="block";
 }
 
-// 🗑️ SLET HELE RUTEN (uden bekræftelse)
+// 🗑️ SLET HELE RUTEN
 async function deleteRoute(route){
   await db.collection("routes").doc(route).delete();
 
@@ -394,11 +395,10 @@ async function addEntry(route){
     car,
     time,
     video,
-    image: savedImage || null
+    image: currentImage || null
   });
 
-  selectedImage = null;
-  savedImage = null;
+  currentImage = null;
 
   openRoute(route);
   await db.collection("routes").doc(route).set({runs});
