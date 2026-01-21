@@ -2,6 +2,7 @@
 <html lang="da">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Time Trials</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
@@ -11,6 +12,11 @@
 
 <style>
 body { font-family:'Orbitron',sans-serif; background:#000; color:#ffb300; overflow-x:hidden; }
+
+/* Forhindrer iOS auto-zoom på input */
+input, textarea, select {
+  font-size:16px;
+}
 
 /* SPEED LINES */
 body::before{
@@ -101,6 +107,55 @@ a{color:#ffb300;}
 }
 
 #snakeCanvas{background:#000;border:2px solid #ffb300;}
+
+/* ================= MOBIL OPTIMERING ================= */
+@media (max-width: 600px){
+
+  body{
+    font-size:14px;
+  }
+
+  h1{
+    font-size:36px !important;
+  }
+
+  .menu-box{
+    width:95%;
+    padding:15px;
+  }
+
+  .route-card{
+    width:90%;
+  }
+
+  .route-container{
+    width:95%;
+    padding:15px;
+  }
+
+  input, button{
+    width:100%;
+    margin-top:6px;
+    box-sizing:border-box;
+  }
+
+  table{
+    font-size:12px;
+  }
+
+  th, td{
+    padding:4px;
+  }
+
+  .flag{
+    display:none;
+  }
+
+  #snakeCanvas{
+    width:260px;
+    height:260px;
+  }
+}
 </style>
 </head>
 
